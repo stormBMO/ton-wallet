@@ -1,54 +1,96 @@
-# React + TypeScript + Vite
+# TON Wallet MVP 🚀
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Современный веб-кошелек для блокчейна TON с поддержкой свопов и аналитикой.
 
-Currently, two official plugins are available:
+![TON Wallet](https://ton.org/download/ton_symbol.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Возможности
 
-## Expanding the ESLint configuration
+- 💼 **Управление кошельком**
+  - Создание нового кошелька
+  - Импорт существующего кошелька
+  - Подключение через TON Connect
+  - Поддержка тестнета и мейннета
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 📊 **Дашборд**
+  - Просмотр баланса TON
+  - Отслеживание джетонов
+  - Анализ риск-профиля
+  - Визуализация данных
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+- 💱 **Своп токенов**
+  - Своп TON на jUSDT
+  - Интеграция со Ston.fi
+  - Поддержка slippage
+  - Безопасные транзакции
+
+## 🛠 Технологии
+
+- React + TypeScript
+- Redux для управления состоянием
+- Tailwind CSS для стилизации
+- TON Connect для интеграции с кошельками
+- Ston.fi API для свопов
+- TON API для данных блокчейна
+
+## 🚀 Быстрый старт
+
+1. Клонируйте репозиторий:
+```bash
+git clone https://github.com/your-username/ton-wallet-mvp.git
+cd ton-wallet-mvp
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2. Установите зависимости:
+```bash
+npm install
 ```
+
+3. Запустите проект:
+```bash
+npm run dev
+```
+
+4. Откройте [http://localhost:5173](http://localhost:5173)
+
+## 🔧 Настройка
+
+1. Создайте файл `.env`:
+```env
+VITE_TON_API_KEY=your_api_key
+```
+
+2. Настройте параметры в `src/config.ts`
+
+## 📱 Поддерживаемые кошельки
+
+- Tonkeeper
+- Tonhub
+- MyTonWallet
+- Другие кошельки с поддержкой TON Connect
+
+## 🔒 Безопасность
+
+- Все приватные ключи хранятся локально
+- Поддержка TON Connect для безопасных транзакций
+- Проверка подписи транзакций
+- Защита от CSRF атак
+
+## 🤝 Вклад в проект
+
+Мы приветствуем вклад в развитие проекта! Пожалуйста, ознакомьтесь с нашими [правилами контрибьюции](CONTRIBUTING.md).
+
+## 📄 Лицензия
+
+MIT License - подробности в файле [LICENSE](LICENSE)
+
+## 🌟 Поддержка
+
+Если у вас есть вопросы или предложения, создайте issue в репозитории или свяжитесь с нами:
+
+- Telegram: [@your_username](https://t.me/your_username)
+- Email: your.email@example.com
+
+---
+
+Сделано с ❤️ для сообщества TON
