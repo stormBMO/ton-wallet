@@ -1,12 +1,18 @@
+import React from 'react';
 import { useEffect, useState } from 'react';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
 import { Network } from '../store/slices/walletSlice';
-import { AssetTable } from '../components/AssetTable';
-import { RiskBarComponent } from '../components/RiskBar';
-import { calculateVolatility, calculateRiskScore } from '../lib/risk';
+import { BalanceCard } from '../components/BalanceCard';
+import { RiskBadge } from '../components/RiskBadge';
+import { TokenTable, Token } from '../components/TokenTable';
 import axios from 'axios';
+import '../index.css';
+import { Particles } from '../components/magicui/particles';
+import { AuroraText } from '../components/magicui/aurora-text';
+import { NeonGradientCard } from '../components/magicui/neon-gradient-card';
+// Magic UI imports (предполагается, что компоненты уже установлены)
 
 const TON_API_BASE_URL: Record<Network, string> = {
   mainnet: 'https://tonapi.io',
@@ -20,7 +26,7 @@ export const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tonBalance, setTonBalance] = useState('0');
-  const [jettonBalances, setJettonBalances] = useState([]);
+  const [jettonBalances, setJettonBalances] = useState<Token[]>([]);
   const [riskScore, setRiskScore] = useState(50); // По умолчанию средний риск
 
   useEffect(() => {
@@ -39,7 +45,6 @@ export const Dashboard = () => {
             const balanceInTon = (BigInt(balanceInNano) / BigInt(1000000000)).toString();
             setTonBalance(balanceInTon);
           } catch (error) {
-            console.error('Failed to fetch TON balance:', error);
             setError('Ошибка при получении баланса TON');
             return;
           }
@@ -47,51 +52,21 @@ export const Dashboard = () => {
           // Получаем балансы jettons
           try {
             const jettonsResponse = await axios.get(`${apiBaseUrl}/v2/accounts/${address}/jettons`);
-            setJettonBalances(jettonsResponse.data.balances || []);
+            const jettons = (jettonsResponse.data.balances || []).map((j: any) => ({
+              symbol: j.symbol || 'JETTON',
+              name: j.name || 'Jetton',
+              balance: j.balance || '0',
+            }));
+            setJettonBalances(jettons);
           } catch (error) {
-            console.error('Failed to fetch jetton balances:', error);
-            // Для тестнета это нормально, что джетоны могут отсутствовать
             if (network === 'mainnet') {
               setError('Ошибка при получении балансов джетонов');
             }
           }
 
-          // Получаем исторические цены TON (только для mainnet)
-          if (network === 'mainnet') {
-            try {
-              const endDate = new Date();
-              const startDate = new Date();
-              startDate.setDate(startDate.getDate() - 30); // 30 дней назад
-
-              const riskResponse = await axios.get(`${apiBaseUrl}/v2/rates/toncoin/history`, {
-                params: {
-                  start_date: startDate.toISOString().split('T')[0],
-                  end_date: endDate.toISOString().split('T')[0],
-                  interval: 'day'
-                }
-              });
-              
-              if (riskResponse.data && riskResponse.data.rates) {
-                const prices = riskResponse.data.rates.map((item: any) => ({
-                  price: item.price,
-                  timestamp: new Date(item.timestamp).getTime()
-                }));
-
-                const volatility = calculateVolatility(prices);
-                const score = calculateRiskScore(volatility);
-                setRiskScore(score);
-              }
-            } catch (error) {
-              console.error('Failed to fetch price history:', error);
-              // Устанавливаем средний риск, если не удалось получить данные
-              setRiskScore(50);
-            }
-          } else {
-            // Для тестнета устанавливаем фиксированный риск
-            setRiskScore(50);
-          }
+          // Получаем риск (заглушка)
+          setRiskScore(50);
         } catch (error) {
-          console.error('Failed to fetch data:', error);
           setError('Ошибка при загрузке данных');
         } finally {
           setIsLoading(false);
@@ -104,8 +79,8 @@ export const Dashboard = () => {
 
   if (!address) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="flex items-center justify-center min-h-screen bg-[#18122B]">
+        <p className="text-gray-300 text-lg">
           Пожалуйста, подключите кошелек для просмотра дашборда
         </p>
       </div>
@@ -114,8 +89,8 @@ export const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600 dark:text-gray-400">
+      <div className="flex items-center justify-center min-h-screen bg-[#18122B]">
+        <p className="text-gray-300 text-lg">
           Загрузка данных...
         </p>
       </div>
@@ -124,8 +99,8 @@ export const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-red-600 dark:text-red-400">
+      <div className="flex items-center justify-center min-h-screen bg-[#18122B]">
+        <p className="text-red-400 text-lg">
           Ошибка: {error}
         </p>
       </div>
@@ -133,16 +108,28 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Дашборд</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Активы</h2>
-          <AssetTable tonBalance={tonBalance} jettonBalances={jettonBalances} />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Риск-профиль</h2>
-          <RiskBarComponent riskScore={riskScore} />
+    <div className="relative min-h-screen bg-[#18122B] overflow-hidden">
+      <Particles className="absolute inset-0 z-0" quantity={80} color="#8c7aff" size={1.2} />
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-2">
+        <div className="w-full max-w-4xl flex flex-col gap-8">
+          <div className="flex flex-col items-center gap-2 mb-2">
+            <AuroraText className="text-4xl md:text-5xl font-extrabold text-center" colors={["#8c7aff","#ff6ad5","#00fff1"]}>
+              Дашборд
+            </AuroraText>
+            <span className="text-base text-[#b8b8ff] font-medium tracking-wide">Ваши активы и риски в TON</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <NeonGradientCard neonColors={{firstColor: '#8c7aff', secondColor: '#ff6ad5'}} borderRadius={24} borderSize={3} className="h-full flex flex-col justify-center">
+              <div className="flex flex-col gap-4 items-center">
+                <BalanceCard balance={tonBalance} />
+                <RiskBadge score={riskScore} />
+              </div>
+            </NeonGradientCard>
+            <NeonGradientCard neonColors={{firstColor: '#00fff1', secondColor: '#8c7aff'}} borderRadius={24} borderSize={3} className="h-full flex flex-col justify-center">
+              <h2 className="text-xl font-semibold mb-4 text-[#8c7aff] text-center">Токены</h2>
+              <TokenTable tokens={[{ symbol: 'TON', name: 'Toncoin', balance: tonBalance }, ...jettonBalances]} />
+            </NeonGradientCard>
+          </div>
         </div>
       </div>
     </div>

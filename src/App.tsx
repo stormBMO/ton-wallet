@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistor } from './store';
-import { Dashboard } from './pages/Dashboard';
 import { SwapPage } from './pages/SwapPage';
 import Header from './components/Header';
 import CreateWalletModal from './components/CreateWalletModal';
+import { Dashboard } from './pages/Dashboard';
 
 function App() {
   return (
