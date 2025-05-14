@@ -5,53 +5,8 @@ import { setCreateWalletModalOpen } from '../store/slices/uiSlice';
 import { resetWallet, setNetwork, setAddress, setMnemonic, setStatus } from '../store/slices/walletSlice';
 import { mnemonicToWalletKey } from '@ton/crypto';
 import { WalletContractV4 } from '@ton/ton';
-import styled from '@emotion/styled';
 import { useState, useEffect } from 'react';
-
-const HeaderContainer = styled.header`
-  background-color: white;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const Nav = styled.nav`
-  display: flex;
-  gap: 1rem;
-`;
-
-const ConnectButton = styled.button`
-  background-color: #3b82f6;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  &:hover {
-    background-color: #2563eb;
-  }
-`;
-
-interface NetworkBadgeProps {
-  isTestnet: boolean;
-}
-
-const NetworkBadge = styled.span<NetworkBadgeProps>`
-  background-color: ${props => props.isTestnet ? '#f59e0b' : '#10b981'};
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-`;
-
-const ImportInput = styled.input`
-  padding: 0.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  margin-right: 0.5rem;
-  width: 300px;
-`;
+import { AuroraText } from './magicui/aurora-text';
 
 const Header = () => {
   const [tonConnectUI] = useTonConnectUI();
@@ -103,33 +58,18 @@ const Header = () => {
     try {
       setImportError(null);
       const words = importMnemonic.trim().split(/\s+/);
-      
       if (words.length !== 24) {
         setImportError('Мнемоника должна содержать 24 слова');
         return;
       }
-
       dispatch(setStatus('loading'));
       const mnemonicPhrase = importMnemonic.trim();
-      
-      // Генерируем ключ из мнемоники
       const key = await mnemonicToWalletKey(words);
-      
-      // Создаем кошелек
-      const wallet = WalletContractV4.create({ 
-        publicKey: key.publicKey, 
-        workchain: 0 
-      });
-      
-      // Получаем адрес кошелька
-      const address = wallet.address.toString();
-      
-      // Сохраняем данные в Redux
+      const walletObj = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
+      const address = walletObj.address.toString();
       dispatch(setMnemonic(mnemonicPhrase));
       dispatch(setAddress(address));
       dispatch(setStatus('connected'));
-      
-      // Очищаем форму
       setShowImport(false);
       setImportMnemonic('');
     } catch (error) {
@@ -140,72 +80,65 @@ const Header = () => {
   };
 
   return (
-    <HeaderContainer>
-      <Nav>
-        <a href="/" className="text-gray-900 dark:text-white">Дашборд</a>
-        <a href="/swap" className="text-gray-900 dark:text-white">Своп</a>
-        <NetworkBadge isTestnet={wallet.network === 'testnet'}>
-          {wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}
-        </NetworkBadge>
-        <button onClick={handleNetworkChange}>
-          Сменить сеть
-        </button>
-      </Nav>
+    <header className="w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between z-20 relative">
+      <div className="flex items-center gap-6">
+        <AuroraText className="text-2xl font-extrabold tracking-tight select-none">Wallet</AuroraText>
+        <nav className="flex gap-4 ml-4">
+          <a href="/" className="text-gray-700 dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 font-medium transition">Дашборд</a>
+          <a href="/swap" className="text-gray-700 dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 font-medium transition">Своп</a>
+          <span className={`px-2 py-0.5 rounded text-xs font-semibold ml-2 ${wallet.network === 'testnet' ? 'bg-yellow-400 text-white' : 'bg-green-500 text-white'}`}>{wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}</span>
+          <button onClick={handleNetworkChange} className="ml-2 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 font-medium transition">Сменить сеть</button>
+        </nav>
+      </div>
       <div className="flex items-center gap-4">
         {wallet.address ? (
           <>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <span className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-gray-100 dark:bg-neutral-800 px-3 py-1 rounded-lg">
               {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-            </div>
-            <ConnectButton onClick={handleDisconnect}>
-              Отключить
-            </ConnectButton>
+            </span>
+            <button onClick={handleDisconnect} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Отключить</button>
           </>
         ) : (
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             {showImport ? (
               <>
                 <div className="flex flex-col gap-2">
-                  <ImportInput
+                  <input
                     type="text"
                     placeholder="Введите 24 слова мнемоники"
                     value={importMnemonic}
                     onChange={(e) => setImportMnemonic(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
                   />
                   {importError && (
-                    <div className="text-red-500 text-sm">
-                      {importError}
-                    </div>
+                    <div className="text-red-500 text-xs">{importError}</div>
                   )}
                 </div>
-                <ConnectButton onClick={handleImportWallet}>
-                  Импорт
-                </ConnectButton>
+                <button onClick={handleImportWallet} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Импорт</button>
                 <button
                   onClick={() => {
                     setShowImport(false);
                     setImportMnemonic('');
                     setImportError(null);
                   }}
-                  className="text-gray-600 hover:text-gray-900"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-lg transition"
                 >
                   Отмена
                 </button>
               </>
             ) : (
               <>
-                <ConnectButton 
+                <button 
                   onClick={handleConnect}
                   disabled={isConnecting}
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
                 >
                   {isConnecting ? 'Подключение...' : 'Подключить кошелек'}
-                </ConnectButton>
-                <ConnectButton onClick={handleCreateWallet}>
-                  Создать кошелек
-                </ConnectButton>
+                </button>
+                <button onClick={handleCreateWallet} className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold transition">Создать кошелек</button>
                 <button
                   onClick={() => setShowImport(true)}
-                  className="text-blue-500 hover:text-blue-600"
+                  className="text-blue-600 dark:text-blue-400 hover:underline px-3 py-2 rounded-lg transition"
                 >
                   Импорт кошелька
                 </button>
@@ -214,7 +147,7 @@ const Header = () => {
           </div>
         )}
       </div>
-    </HeaderContainer>
+    </header>
   );
 };
 

@@ -34,22 +34,17 @@ export interface TokenTableProps {
 }
 
 export const TokenTable: React.FC<TokenTableProps> = ({ tokens }) => (
-  <Card>
-    <Table>
-      <thead>
-        <tr>
-          <Th>Токен</Th>
-          <Th>Баланс</Th>
-        </tr>
-      </thead>
-      <tbody>
-        {tokens.map((token) => (
-          <tr key={token.symbol}>
-            <Td><TokenSymbol>{token.symbol}</TokenSymbol> <span style={{ color: '#888', fontSize: '0.95em' }}>{token.name}</span></Td>
-            <Td>{token.balance}</Td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
-  </Card>
+  <div className="rounded-2xl shadow-md bg-white dark:bg-neutral-900 p-6">
+    <div className="flex flex-col gap-2">
+      {tokens.map(token => (
+        <div key={token.symbol} className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-100 dark:border-neutral-800">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold">{token.symbol}</span>
+            <span className="text-gray-400 text-xs">{token.name}</span>
+          </div>
+          <div className="font-mono">{token.balance}</div>
+        </div>
+      ))}
+    </div>
+  </div>
 ); 

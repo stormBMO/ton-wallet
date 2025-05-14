@@ -108,8 +108,8 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#18122B] overflow-hidden">
-      <Particles className="absolute inset-0 z-0" quantity={80} color="#8c7aff" size={1.2} />
+    <div className="relative min-h-screen bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
+      {/* <Particles className="absolute inset-0 z-0" quantity={80} color="#8c7aff" size={1.2} /> */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-2">
         <div className="w-full max-w-4xl flex flex-col gap-8">
           <div className="flex flex-col items-center gap-2 mb-2">

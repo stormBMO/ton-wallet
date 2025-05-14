@@ -1,63 +1,60 @@
 import TonWeb from 'tonweb';
 
-export interface TransferTXParams {
-  toAddress: string;
-  amount: string; // в TON или jetton, зависит от isJetton
+export type TransferTXParams = {
+  to: string;
+  amount: string; // в TON или токенах (строка для точности)
   comment?: string;
-  isJetton?: boolean;
-  jettonAddress?: string;
+  token?: 'TON' | 'TIP3';
   secretKey: Uint8Array;
+  jettonAddress?: string; // для TIP-3
   walletAddress: string;
-  providerUrl?: string;
-}
+  network?: 'testnet' | 'mainnet';
+};
 
-/**
- * Отправка TON или TIP-3 (jetton) токенов с подписью локальным ключом
- */
 export async function transferTX({
-  toAddress,
+  to,
   amount,
   comment,
-  isJetton = false,
-  jettonAddress,
+  token = 'TON',
   secretKey,
+  jettonAddress,
   walletAddress,
-  providerUrl = 'https://testnet.toncenter.com/api/v2/jsonRPC',
-}: TransferTXParams): Promise<string> {
+  network = 'testnet',
+}: TransferTXParams): Promise<{ txHash: string }> {
+  if (!to || !amount || !secretKey || !walletAddress) throw new Error('Некорректные параметры');
+
+  const providerUrl = network === 'testnet'
+    ? 'https://testnet.toncenter.com/api/v2/jsonRPC'
+    : 'https://toncenter.com/api/v2/jsonRPC';
   const tonweb = new TonWeb(new TonWeb.HttpProvider(providerUrl));
   const WalletClass = TonWeb.Wallets.all.v3R2;
   const wallet = new WalletClass(tonweb.provider, { publicKey: secretKey.subarray(32, 64), wc: 0, address: walletAddress });
   const seqno = await wallet.methods.seqno().call();
 
-  if (!isJetton) {
+  if (token === 'TON') {
     // Отправка TON
     const tx = wallet.methods.transfer({
       secretKey,
-      toAddress: new TonWeb.utils.Address(toAddress),
+      toAddress: new TonWeb.utils.Address(to),
       amount: TonWeb.utils.toNano(amount),
       seqno: Number(seqno),
       payload: comment ? TonWeb.utils.stringToBytes(comment) : undefined,
       sendMode: 3,
     });
     const result = await tx.send();
-    return result;
+    return { txHash: result }; // result = hash
   } else {
     // Отправка TIP-3 (jetton)
     if (!jettonAddress) throw new Error('jettonAddress required for jetton transfer');
     const JettonWallet = TonWeb.token.jetton.JettonWallet;
     const jettonWallet = new JettonWallet(tonweb.provider, { address: jettonAddress });
-    // @ts-ignore
+    // @ts-expect-error jettonAmount используется в tonweb, но не описан в типах
     const payload = await jettonWallet.createTransferBody({
-      amount: TonWeb.utils.toNano(amount),
-      toAddress: new TonWeb.utils.Address(toAddress),
-      responseAddress: new TonWeb.utils.Address(walletAddress),
-      forwardAmount: TonWeb.utils.toNano('0.000000001'), // 1 нанотон для уведомления
-      forwardPayload: comment
-        ? new Uint8Array([
-            0, 0, 0, 0, // 4 байта tag для text comment
-            ...new TextEncoder().encode(comment)
-          ])
-        : undefined,
+      jettonAmount: TonWeb.utils.toNano(amount),
+      to: new TonWeb.utils.Address(to),
+      from: new TonWeb.utils.Address(walletAddress),
+      forwardAmount: TonWeb.utils.toNano('0.01'),
+      forwardPayload: comment ? new TextEncoder().encode(comment) : undefined,
     });
     const tx = wallet.methods.transfer({
       secretKey,
@@ -68,6 +65,6 @@ export async function transferTX({
       sendMode: 3,
     });
     const result = await tx.send();
-    return result;
+    return { txHash: result };
   }
 } 
