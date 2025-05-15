@@ -3,6 +3,7 @@ import { useTonConnectUI } from '@tonconnect/ui-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 import { SwapForm } from '../components/SwapForm';
+import { WalletAdapter, TonConnectAdapter, InternalWalletAdapter } from '../lib/wallet';
 
 // Заглушка для ConfirmSwapModal
 const ConfirmSwapModal = ({ open, onClose, amount, rate, fee, onConfirm }: any) => {
@@ -33,25 +34,76 @@ export const SwapPage = () => {
   const [toToken, setToToken] = useState('jUSDT');
   const [amount, setAmount] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [walletType, setWalletType] = useState<'tonconnect' | 'internal'>('tonconnect');
+  const [walletAdapter, setWalletAdapter] = useState<WalletAdapter | null>(null);
+  const [tonConnectUI] = useTonConnectUI();
   // Примерные значения для превью
   const rate = '1 TON ≈ 1.01 jUSDT';
   const minReceive = amount ? (parseFloat(amount) * 1.01).toFixed(2) : '0.00';
   const fee = '0.1%';
+
+  // Инициализация адаптера при смене типа кошелька
+  React.useEffect(() => {
+    if (walletType === 'tonconnect') {
+      setWalletAdapter(new TonConnectAdapter(tonConnectUI));
+    } else {
+      // Для демо: prompt для сид-фразы
+      const mnemonic = window.localStorage.getItem('demo_mnemonic') || window.prompt('Введите сид-фразу (24 слова):') || '';
+      if (mnemonic) {
+        window.localStorage.setItem('demo_mnemonic', mnemonic);
+        setWalletAdapter(new InternalWalletAdapter(mnemonic));
+      }
+    }
+  }, [walletType, tonConnectUI]);
 
   const handleSwap = (e: React.FormEvent) => {
     e.preventDefault();
     setShowModal(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowModal(false);
-    // TODO: логика отправки транзакции
-    alert('Своп подтверждён!');
+    if (!walletAdapter) {
+      alert('Кошелек не выбран!');
+      return;
+    }
+    try {
+      // Получаем котировку
+      const amountInNano = (parseFloat(amount) * 1_000_000_000).toString();
+      const apiUrl = 'https://testnet.ston.fi/api/v1/quote';
+      const address = await walletAdapter.getAddress();
+      const quoteResponse = await fetch(`${apiUrl}?from=TON&to=jUSDT&amount=${amountInNano}&slippage=0.5&userAddress=${address}`);
+      const quote = await quoteResponse.json();
+      if (!quote || !quote.to) throw new Error('Не удалось получить котировку');
+      // Формируем транзакцию
+      const tx = {
+        validUntil: Math.floor(Date.now() / 1000) + 600,
+        messages: [
+          {
+            address: quote.to,
+            amount: quote.amount,
+            payload: quote.payload,
+          },
+        ],
+      };
+      await walletAdapter.sendTx(tx);
+      alert('Своп подтверждён!');
+      setAmount('');
+    } catch (e: any) {
+      alert(e.message || 'Ошибка свопа');
+    }
   };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex flex-col justify-center">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">Своп токенов</h1>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Кошелек</label>
+        <select value={walletType} onChange={e => setWalletType(e.target.value as any)} className="w-full py-3 px-4 rounded-[12px] border border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#7C3AED]">
+          <option value="tonconnect">TonConnect</option>
+          <option value="internal">Встроенный кошелек</option>
+        </select>
+      </div>
       <form onSubmit={handleSwap} className="bg-white dark:bg-neutral-900 rounded-[12px] shadow p-6 flex flex-col gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Из</label>
