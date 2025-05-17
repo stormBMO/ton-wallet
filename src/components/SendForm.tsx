@@ -1,5 +1,5 @@
+import { transferTXThunk } from '@/store/thunks/transferTX';
 import React, { useState } from 'react';
-import { transferTX } from '../lib/transferTX';
 
 const TOKENS = [
   { symbol: 'TON', name: 'Toncoin' },
@@ -24,7 +24,7 @@ export const SendForm = () => {
     setResult(null);
     setError(null);
     try {
-      const tx = await transferTX({
+      const tx = await transferTXThunk({
         to,
         amount,
         comment,

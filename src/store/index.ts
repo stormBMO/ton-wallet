@@ -1,8 +1,11 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, Reducer } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-import walletReducer from './slices/walletSlice';
-import uiReducer from './slices/uiSlice';
+import { walletReducer, WalletState } from './slices/wallet/walletSlice';
+import { uiReducer, UiState } from './slices/ui/uiSlice';
+import { swapReducer } from './slices/swap/swapSlice';
+import { authReducer } from './slices/auth/authSlice';
+import { riskReducer } from './slices/risk/riskSlice';
 
 const walletPersistConfig = {
   key: 'wallet',
@@ -18,8 +21,11 @@ const uiPersistConfig = {
 
 export const store = configureStore({
   reducer: {
-    wallet: persistReducer(walletPersistConfig, walletReducer),
-    ui: persistReducer(uiPersistConfig, uiReducer),
+    wallet: persistReducer<WalletState>(walletPersistConfig, walletReducer),
+    ui: persistReducer<UiState>(uiPersistConfig, uiReducer),
+    swap: swapReducer,
+    auth: authReducer,
+    risk: riskReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

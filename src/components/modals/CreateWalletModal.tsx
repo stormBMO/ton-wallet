@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../store';
-import { setMnemonic, setAddress, setStatus } from '../store/slices/walletSlice';
-import { setCreateWalletModalOpen } from '../store/slices/uiSlice';
+import { RootState } from '../../store';
+import { setMnemonic, setAddress, setStatus } from '../../store/slices/wallet/walletSlice';
+import { setCreateWalletModalOpen } from '../../store/slices/ui/uiSlice';
 import { mnemonicToWalletKey } from '@ton/crypto';
 import { WalletContractV4 } from '@ton/ton';
 import { wordlist } from '@scure/bip39/wordlists/english';

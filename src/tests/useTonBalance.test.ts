@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useWalletStore } from '../store/wallet';
+import { useWalletStore } from '../store/slices/wallet';
 
 describe('useTonBalance', () => {
   it('should fetch and update balance', async () => {

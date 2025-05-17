@@ -1,12 +1,14 @@
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { setCreateWalletModalOpen } from '../store/slices/uiSlice';
-import { resetWallet, setNetwork, setAddress, setMnemonic, setStatus } from '../store/slices/walletSlice';
+import { setCreateWalletModalOpen, setConnectWalletModalOpen } from '../store/slices/ui/uiSlice';
+import { resetWallet, setNetwork, setAddress, setMnemonic, setStatus } from '../store/slices/wallet/walletSlice';
 import { mnemonicToWalletKey } from '@ton/crypto';
 import { WalletContractV4 } from '@ton/ton';
 import { useState, useEffect } from 'react';
 import { AuroraText } from './magicui/aurora-text';
+import { useWalletAuth } from '../hooks/useWalletAuth';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [tonConnectUI] = useTonConnectUI();
@@ -16,6 +18,8 @@ const Header = () => {
   const [importMnemonic, setImportMnemonic] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const { isAuthenticated, address, login, logout } = useWalletAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (tonConnectUI.account?.address) {
@@ -79,6 +83,15 @@ const Header = () => {
     }
   };
 
+  const handleOpenConnectModal = () => {
+    dispatch(setConnectWalletModalOpen(true));
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/connect');
+  };
+
   return (
     <header className="w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between z-20 relative">
       <div className="flex items-center gap-6">
@@ -91,60 +104,15 @@ const Header = () => {
         </nav>
       </div>
       <div className="flex items-center gap-4">
-        {wallet.address ? (
+        {isAuthenticated ? (
           <>
             <span className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-gray-100 dark:bg-neutral-800 px-3 py-1 rounded-lg">
-              {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+              {address ? `${address.slice(0, 4)}…${address.slice(-4)}` : ''}
             </span>
-            <button onClick={handleDisconnect} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Отключить</button>
+            <button onClick={handleLogout} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Выйти</button>
           </>
         ) : (
-          <div className="flex gap-2 items-center">
-            {showImport ? (
-              <>
-                <div className="flex flex-col gap-2">
-                  <input
-                    type="text"
-                    placeholder="Введите 24 слова мнемоники"
-                    value={importMnemonic}
-                    onChange={(e) => setImportMnemonic(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
-                  />
-                  {importError && (
-                    <div className="text-red-500 text-xs">{importError}</div>
-                  )}
-                </div>
-                <button onClick={handleImportWallet} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Импорт</button>
-                <button
-                  onClick={() => {
-                    setShowImport(false);
-                    setImportMnemonic('');
-                    setImportError(null);
-                  }}
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-lg transition"
-                >
-                  Отмена
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={handleConnect}
-                  disabled={isConnecting}
-                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-60"
-                >
-                  {isConnecting ? 'Подключение...' : 'Подключить кошелек'}
-                </button>
-                <button onClick={handleCreateWallet} className="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-semibold transition">Создать кошелек</button>
-                <button
-                  onClick={() => setShowImport(true)}
-                  className="text-blue-600 dark:text-blue-400 hover:underline px-3 py-2 rounded-lg transition"
-                >
-                  Импорт кошелька
-                </button>
-              </>
-            )}
-          </div>
+          <button onClick={handleOpenConnectModal} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Войти</button>
         )}
       </div>
     </header>

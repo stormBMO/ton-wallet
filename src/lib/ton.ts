@@ -35,9 +35,11 @@ export const calculateVolatility = (prices: number[]): number => {
   const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
   const variance = returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
   
-  return Math.sqrt(variance * 252); // Annualized volatility
+  return Math.sqrt(variance * 252); // Годовая волатильность
 };
 
 export const calculateRiskScore = (volatility: number): number => {
+  // Преобразуем волатильность в риск-скор от 0 до 100
+  // Высокая волатильность = высокий риск
   return Math.min(100, Math.round(volatility * 800));
 };
