@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { setConnectWalletModalOpen, setCreateWalletModalOpen } from '../../store/slices/ui/uiSlice';
+import { setConnectWalletModalOpen, setCreateWalletModalOpen, setImportWalletModalOpen } from '../../store/slices/ui/uiSlice';
 import { useWalletAuth } from '../../hooks/useWalletAuth';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
+import { AuthStatus } from '@/store/slices/auth/types';
+import { setAddress, setMnemonic } from '@/store/slices/wallet/walletSlice';
+import { setStatus } from '@/store/slices/wallet/walletSlice';
+import { mnemonicToWalletKey } from '@ton/crypto';
+import { WalletContractV4 } from '@ton/ton';
 
 const ModalBackdrop = styled.div`
   position: fixed;
@@ -18,7 +23,7 @@ const ModalBackdrop = styled.div`
   justify-content: center;
 `;
 const ModalBox = styled.div`
-  width: 420px;
+  width: 820px;
   padding: 32px;
   border-radius: 16px;
   background: #fff;
@@ -60,11 +65,17 @@ const ConnectWalletModal: React.FC = () => {
   const navigate = useNavigate();
   const { authStatus, login } = useWalletAuth();
   const isOpen = useSelector((s: RootState) => s.ui.isConnectWalletModalOpen);
-  const [tab, setTab] = useState<'telegram' | 'words'>('telegram');
-  const [mnemonic, setMnemonic] = useState('');
+  const [tab, setTab] = useState<'telegram' | 'create' | 'import'>();
+  const [importMnemonic, setImportMnemonic] = useState('');
   const [mnemonicError, setMnemonicError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tonConnectUI] = useTonConnectUI();
+
+  useEffect(() => {
+    if (authStatus === AuthStatus.SUCCEEDED) {
+      handleClose();
+    }
+  }, [authStatus]);
 
   if (!isOpen) return null;
 
@@ -72,10 +83,8 @@ const ConnectWalletModal: React.FC = () => {
     dispatch(setConnectWalletModalOpen(false));
     setMnemonic('');
     setMnemonicError(null);
-    setTab('telegram');
   };
 
-  // Telegram (TonConnect v2)
   const handleTonConnect = async () => {
     setIsSubmitting(true);
     try {
@@ -95,12 +104,18 @@ const ConnectWalletModal: React.FC = () => {
     }
   };
 
-  const handleTabsChange = (tab: 'telegram' | 'words') => {
-    if (tab === 'words') {
-      dispatch(setCreateWalletModalOpen(true));
-      handleClose();
-    } else {
-      setTab(tab);
+  const handleTabsChange = (tab: 'telegram' | 'import' | 'create') => {
+    switch (tab) {
+      case 'create':
+        dispatch(setCreateWalletModalOpen(true));
+        handleClose();
+        break;
+      case 'import':
+        dispatch(setImportWalletModalOpen(true));
+        handleClose();
+        break;
+      case 'telegram':
+        handleTonConnect()
     }
   };
 
@@ -110,30 +125,9 @@ const ConnectWalletModal: React.FC = () => {
         <CloseBtn onClick={handleClose} aria-label="Закрыть">×</CloseBtn>
         <div style={{ display: 'flex', marginBottom: 24 }}>
           <TabBtn active={tab === 'telegram'} onClick={() => handleTabsChange('telegram')}>Подключить Telegram-кошелёк</TabBtn>
-          <TabBtn active={tab === 'words'} onClick={() => handleTabsChange('words')}>24 слова</TabBtn>
+          <TabBtn active={tab === 'create'} onClick={() => handleTabsChange('create')}>Создать кошелек</TabBtn>
+          <TabBtn active={tab === 'import'} onClick={() => handleTabsChange('import')}>Импортировать кошелек</TabBtn>
         </div>
-        {tab === 'telegram' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <button
-              onClick={handleTonConnect}
-              disabled={isSubmitting || authStatus === 'loading'}
-              style={{
-                padding: '12px',
-                borderRadius: 8,
-                background: '#0088cc',
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: 16,
-                border: 'none',
-                cursor: isSubmitting || authStatus === 'loading' ? 'not-allowed' : 'pointer',
-                marginBottom: 8,
-              }}
-            >
-              {isSubmitting || authStatus === 'loading' ? 'Подключение...' : 'Подключить Telegram-кошелёк'}
-            </button>
-            {mnemonicError && <div style={{ color: 'red', fontSize: 14 }}>{mnemonicError}</div>}
-          </div>
-        )}
       </ModalBox>
     </ModalBackdrop>,
     document.getElementById('modal-root') as HTMLElement

@@ -49,39 +49,12 @@ const Header = () => {
     }
   };
 
-  const handleCreateWallet = () => {
-    dispatch(setCreateWalletModalOpen(true));
-  };
-
   const handleNetworkChange = () => {
     const newNetwork = wallet.network === 'testnet' ? 'mainnet' : 'testnet';
     dispatch(setNetwork(newNetwork));
   };
 
-  const handleImportWallet = async () => {
-    try {
-      setImportError(null);
-      const words = importMnemonic.trim().split(/\s+/);
-      if (words.length !== 24) {
-        setImportError('Мнемоника должна содержать 24 слова');
-        return;
-      }
-      dispatch(setStatus('loading'));
-      const mnemonicPhrase = importMnemonic.trim();
-      const key = await mnemonicToWalletKey(words);
-      const walletObj = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
-      const address = walletObj.address.toString();
-      dispatch(setMnemonic(mnemonicPhrase));
-      dispatch(setAddress(address));
-      dispatch(setStatus('connected'));
-      setShowImport(false);
-      setImportMnemonic('');
-    } catch (error) {
-      console.error('Failed to import wallet:', error);
-      setImportError('Ошибка при импорте кошелька. Проверьте правильность мнемоники.');
-      dispatch(setStatus('error'));
-    }
-  };
+
 
   const handleOpenConnectModal = () => {
     dispatch(setConnectWalletModalOpen(true));

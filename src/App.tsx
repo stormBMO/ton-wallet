@@ -6,6 +6,7 @@ import Header from './components/Header';
 import CreateWalletModal from './components/modals/CreateWalletModal';
 import { Dashboard } from './pages/DashboardPage';
 import ConnectWalletModal from './components/modals/ConnectWalletModal';
+import { ImportWalletModal } from './components/modals/ImportWalletModal';
 
 function App() {
   return (
@@ -14,11 +15,13 @@ function App() {
 		<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
 		  <Header />
 		  <Routes>
-			<Route path="/dashboard" element={<Dashboard />} />
+			<Route path="/" element={<Dashboard />} />
+			<Route path="/connect-wallet" element={<ConnectWalletModal />} />
 			<Route path="/swap" element={<SwapPage />} />
 		  </Routes>
-		  <CreateWalletModal />
 		  <ConnectWalletModal />
+		  <CreateWalletModal />
+		  <ImportWalletModal />
 		</div>
 	  </Router>
 	</PersistGate>

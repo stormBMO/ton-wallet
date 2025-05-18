@@ -1,42 +1,35 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import apiClient from '@/api/axios';
+import { AuthStatus } from './types';
 
 export interface AuthState {
   jwt: string | null;
   address: string | null;
-  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  status: AuthStatus;
   error: string | null | undefined;
 }
 
 const initialState: AuthState = {
   jwt: localStorage.getItem('jwt'),
   address: localStorage.getItem('address'),
-  status: 'idle',
+  status: AuthStatus.IDLE,
   error: null,
-};
-
-// Заглушка для функции подписи кошельком
-// В реальном приложении здесь будет интеграция с TonConnect или другим SDK
-const signNonceWithWallet = async (nonce: string, address: string, publicKey: string): Promise<string> => {
-  console.warn('signNonceWithWallet is a stub. Implement actual wallet signing.');
-  // Это просто для примера, реальная подпись будет другой
-  return `signed:${nonce}:${address}:${publicKey}`;
 };
 
 export const loginWithWallet = createAsyncThunk(
   'auth/loginWithWallet',
-  async (payload: { address: string; publicKey: string }, { rejectWithValue }) => {
+  async (payload: { address: string; publicKey: string; signature: string }, { rejectWithValue }) => {
     try {
       const nonceResponse = await apiClient.get('/api/auth/request_nonce');
       const { nonce } = nonceResponse.data;
 
-      const signature = await signNonceWithWallet(nonce, payload.address, payload.publicKey);
+      // const signature = await signNonceWithWallet(nonce, payload.address, payload.publicKey);
 
       const verifyResponse = await apiClient.post('/api/auth/verify_signature', {
         address: payload.address,
         public_key: payload.publicKey,
         nonce,
-        signature,
+        signature: payload.signature,
       });
 
       const { access_token } = verifyResponse.data;
@@ -65,7 +58,7 @@ const authSlice = createSlice({
     clearToken: (state) => {
       state.jwt = null;
       state.address = null;
-      state.status = 'idle';
+      state.status = AuthStatus.IDLE;
       state.error = null;
       localStorage.removeItem('jwt');
       localStorage.removeItem('address');
@@ -74,16 +67,16 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(loginWithWallet.pending, (state) => {
-        state.status = 'loading';
+        state.status = AuthStatus.LOADING;
         state.error = null;
       })
       .addCase(loginWithWallet.fulfilled, (state, action) => {
-        state.status = 'succeeded';
+        state.status = AuthStatus.SUCCEEDED;
         state.jwt = action.payload.jwt;
         state.address = action.payload.address;
       })
       .addCase(loginWithWallet.rejected, (state, action) => {
-        state.status = 'failed';
+        state.status = AuthStatus.FAILED;
         state.error = action.payload as string;
         state.jwt = null;
         state.address = null;

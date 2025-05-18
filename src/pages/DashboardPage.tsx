@@ -1,134 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { useTonConnectUI } from '@tonconnect/ui-react';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
-import type { Network } from '../store/types';
+import React from 'react';
 import { BalanceCard } from '../components/BalanceCard';
 import { TokenTable } from '../components/TokenTable';
-import type { Token } from '../components/TokenTable';
-import axios from 'axios';
 import '../index.css';
 import { Particles } from '../components/magicui/particles';
 import { AuroraText } from '../components/magicui/aurora-text';
 import { NeonGradientCard } from '../components/magicui/neon-gradient-card';
-import { useWalletAuth } from '../hooks/useWalletAuth';
-import { fetchRiskMetrics } from '../store/slices/risk/riskSlice';  
-import type { RiskMetrics as RiskMetricsType } from '../store/slices/risk/types';
-import { useNavigate } from 'react-router-dom';
-import { TON_API_BASE_URL } from '@/constants';
-
-
-export interface DashboardToken extends Token {
-  address: string;
-  risk?: RiskMetricsType;
-  riskStatus?: 'idle' | 'loading' | 'succeeded' | 'failed';
-  riskError?: string | null | undefined;
-}
-
-interface RawTokenData {
-  address: string;
-  symbol: string;
-  name: string;
-  balance: string;
-}
+import { useDashboard } from '@/hooks/useDashboard';
 
 export const Dashboard = () => {
-  const [tonConnectUI] = useTonConnectUI();
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
+  const { isBalancesLoading, dataError, displayTokens, handleLogout, isAuthenticated, authStatus, connectedWalletAddress } = useDashboard();
 
-  const { address: connectedWalletAddress, network } = useSelector((state: RootState) => state.wallet) as { address: string | null; network: Network };
-  const { isAuthenticated, logout: authLogout, authStatus } = useWalletAuth();
-  const riskState = useSelector((state: RootState) => state.risk);
-  const riskByToken = riskState?.byToken || {};
-  const riskStatusMap = riskState?.status || {};
-  const riskErrorMap = riskState?.error || {};
-
-  const [isBalancesLoading, setIsBalancesLoading] = useState(false);
-  const [dataError, setDataError] = useState<string | null>(null);
-  
-  const [rawTokensData, setRawTokensData] = useState<RawTokenData[]>([]);
-  const [displayTokens, setDisplayTokens] = useState<DashboardToken[]>([]);
-
-  useEffect(() => {
-    if (authStatus !== 'loading' && !isAuthenticated) {
-      navigate('/connect-wallet');
-    }
-  }, [isAuthenticated, authStatus, navigate]);
-
-  const fetchWalletData = useCallback(async () => {
-    if (isAuthenticated && connectedWalletAddress) {
-      setIsBalancesLoading(true);
-      setDataError(null);
-      const apiBaseUrl = TON_API_BASE_URL[network];
-      let newRawTokens: RawTokenData[] = [];
-
-      try {
-        let tonBalanceStr = '0';
-        try {
-          const tonResponse = await axios.get(`${apiBaseUrl}/v2/accounts/${connectedWalletAddress}`);
-          const balanceInNano = tonResponse.data.balance;
-          tonBalanceStr = (BigInt(balanceInNano) / BigInt(1000000000)).toString();
-          newRawTokens.push({ address: connectedWalletAddress, symbol: 'TON', name: 'Toncoin', balance: tonBalanceStr });
-        } catch (fetchTonError) {
-          console.error('Ошибка при получении баланса TON:', fetchTonError);
-          setDataError('Ошибка при получении баланса TON');
-          newRawTokens.push({ address: connectedWalletAddress, symbol: 'TON', name: 'Toncoin', balance: '0' });
-        }
-
-        try {
-          const jettonsResponse = await axios.get(`${apiBaseUrl}/v2/accounts/${connectedWalletAddress}/jettons`);
-          const fetchedJettons: RawTokenData[] = (jettonsResponse.data.balances || []).map((j: any) => ({
-            address: j.jetton.address,
-            symbol: j.jetton.symbol || 'JETTON',
-            name: j.jetton.name || 'Jetton',
-            balance: (BigInt(j.balance) / BigInt(10 ** (j.jetton.decimals || 9))).toString(),
-          }));
-          newRawTokens.push(...fetchedJettons);
-        } catch (fetchJettonsError) {
-          console.error('Ошибка при получении балансов джетонов:', fetchJettonsError);
-          if (network === 'mainnet') {
-            setDataError((prevError) => prevError ? `${prevError}, Ошибка джетонов` : 'Ошибка джетонов');
-          }
-        }
-        
-        setRawTokensData(newRawTokens);
-
-        newRawTokens.forEach(token => {
-          if (!riskStatusMap[token.address] || riskStatusMap[token.address] === 'failed') {
-            dispatch(fetchRiskMetrics({ address: token.address }));
-          }
-        });
-
-      } catch (err) {
-        console.error('Общая ошибка при загрузке данных кошелька:', err);
-        setDataError('Общая ошибка загрузки данных');
-      } finally {
-        setIsBalancesLoading(false);
-      }
-    } else {
-      setRawTokensData([]);
-    }
-  }, [isAuthenticated, connectedWalletAddress, network, dispatch]);
-
-  useEffect(() => {
-    fetchWalletData();
-  }, [fetchWalletData]);
-
-  useEffect(() => {
-    const combinedTokens = rawTokensData.map(rawToken => ({
-      ...rawToken,
-      risk: riskByToken[rawToken.address],
-      riskStatus: riskStatusMap[rawToken.address],
-      riskError: riskErrorMap[rawToken.address],
-    }));
-    setDisplayTokens(combinedTokens);
-  }, [rawTokensData, riskByToken, riskStatusMap, riskErrorMap]);
-
-  const handleLogout = () => {
-    authLogout();
-    tonConnectUI.disconnect().catch(e => console.error("TonConnect disconnect error:", e));
-  };
+  console.log(isBalancesLoading, dataError, displayTokens, handleLogout, isAuthenticated, authStatus, connectedWalletAddress);
 
   if (authStatus === 'loading') {
     return (

@@ -4,12 +4,14 @@ export interface UiState {
   theme: 'light' | 'dark' | 'system';
   isCreateWalletModalOpen: boolean;
   isConnectWalletModalOpen: boolean;
+  isImportWalletModalOpen: boolean;
 }
 
 const initialState: UiState = {
   theme: 'system',
   isCreateWalletModalOpen: false,
   isConnectWalletModalOpen: false,
+  isImportWalletModalOpen: false,
 };
 
 export const uiSlice = createSlice({
@@ -25,6 +27,9 @@ export const uiSlice = createSlice({
     setConnectWalletModalOpen: (state, action: PayloadAction<boolean>) => {
       state.isConnectWalletModalOpen = action.payload;
     },
+    setImportWalletModalOpen: (state, action: PayloadAction<boolean>) => {
+      state.isImportWalletModalOpen = action.payload;
+    },
   },
 });
 
@@ -32,6 +37,7 @@ export const {
   setTheme,
   setCreateWalletModalOpen,
   setConnectWalletModalOpen,
+  setImportWalletModalOpen,
 } = uiSlice.actions;
 
 export const uiReducer = uiSlice.reducer;

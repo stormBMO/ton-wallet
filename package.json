@@ -62,5 +62,58 @@
     "util": "^0.12.5",
     "vite": "^5.1.6",
     "vitest": "^1.3.1"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "project": [
+        "./tsconfig.json",
+        "./cypress/tsconfig.json"
+      ]
+    },
+    "rules": {
+      "quotes": "off",
+      "@typescript-eslint/no-shadow": "off",
+      "react-hooks/rules-of-hooks": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+      "arrow-parens": "off",
+      "react/prop-types": "off",
+      "react/jsx-props-no-spreading": "off",
+      "react/state-in-constructor": "off",
+      "linebreak-style": 0,
+      "no-param-reassign": "off",
+      "no-unsafe-optional-chaining": "warn",
+      "class-methods-use-this": "off",
+      "import/no-duplicates": "warn",
+      "object-curly-spacing": "error",
+      "space-infix-ops": [
+        "error",
+        {
+          "int32Hint": false
+        }
+      ],
+      "react/destructuring-assignment": "off",
+      "react/static-property-placement": "off",
+      "react/forbid-prop-types": "off",
+      "react/jsx-fragments": [
+        2,
+        "element"
+      ],
+      "react/jsx-curly-spacing": [
+        2,
+        {
+          "when": "always",
+          "children": true
+        }
+      ],
+      "@typescript-eslint/no-angle-bracket-type-assertion": "off",
+      "@typescript-eslint/naming-convention": "off",
+      "@typescript-eslint/consistent-type-assertions": [
+        2,
+        {
+          "assertionStyle": "as",
+          "objectLiteralTypeAssertions": "never"
+        }
+      ]
+    }
   }
 }

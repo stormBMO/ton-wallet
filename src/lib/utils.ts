@@ -5,4 +5,10 @@ const cn = (...classes: ClassValue[]) => {
   return twMerge(clsx(classes))
 }
 
-export { cn }
+const toHex = (buffer: Uint8Array): string => {
+  return Array.from(buffer)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+export { cn, toHex }

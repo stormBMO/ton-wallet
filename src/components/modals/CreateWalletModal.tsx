@@ -6,6 +6,9 @@ import { setCreateWalletModalOpen } from '../../store/slices/ui/uiSlice';
 import { mnemonicToWalletKey } from '@ton/crypto';
 import { WalletContractV4 } from '@ton/ton';
 import { wordlist } from '@scure/bip39/wordlists/english';
+import { useWalletAuth } from '@/hooks/useWalletAuth';
+import { AuthStatus } from '@/store/slices/auth/types';
+import { toHex } from '@/lib/utils';
 
 const CreateWalletModal = () => {
   const dispatch = useDispatch();
@@ -14,8 +17,15 @@ const CreateWalletModal = () => {
   const [generatedMnemonic, setGeneratedMnemonic] = useState<string[]>([]);
   const [confirmedMnemonic, setConfirmedMnemonic] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
+  const { login, isAuthenticated, authStatus } = useWalletAuth();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && authStatus === AuthStatus.SUCCEEDED) {
+        dispatch(setCreateWalletModalOpen(false));
+    }
+  }, [isAuthenticated]);
 
   const generateMnemonic = () => {
     const words = Array.from({ length: 24 }, () => {
@@ -32,6 +42,8 @@ const CreateWalletModal = () => {
       const wallet = WalletContractV4.create({ publicKey: key.publicKey, workchain: 0 });
       const address = wallet.address.toString();
       dispatch(setAddress(address));
+      
+      await login({ address, publicKey: Buffer.from(key.publicKey).toString('hex'), signature: Buffer.from(key.secretKey).toString('base64') });
       dispatch(setStatus('connected'));
     } catch (error) {
       console.error('Failed to generate address:', error);

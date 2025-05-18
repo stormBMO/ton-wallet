@@ -9,7 +9,7 @@ export const getQuote = async ({
   toToken, 
   amount, 
   userAddress, 
-  network = 'mainnet' 
+  network = 'testnet' 
 }: { 
   fromToken: string; 
   toToken: string; 
