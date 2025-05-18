@@ -10,6 +10,7 @@ import styled from '@emotion/styled';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { AuthStatus } from '@/store/slices/auth/types';
 import { setToken } from '@/store/slices/auth/authSlice';
+import { useNavigate } from 'react-router-dom';
 
 const ModalBackdrop = styled.div`
   position: fixed;
@@ -45,6 +46,7 @@ const CloseBtn = styled.button`
 
 export const ImportWalletModal: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { isImportWalletModalOpen: isOpen } = useSelector((state: RootState) => state.ui);
   const { login, isAuthenticated, authStatus } = useWalletAuth();
   const [mnemonic, setMnemonicInput] = useState('');
@@ -77,13 +79,10 @@ export const ImportWalletModal: React.FC = () => {
       dispatch(setAddress(address));
       await login({
           address, publicKey: Buffer.from(key.publicKey).toString('hex'),
-          signature: Buffer.from(key.secretKey).toString('base64')
+          privateKey: key.secretKey
       });
-    //   dispatch(setToken({
-    //     address,
-    //     jwt: Buffer.from(key.secretKey).toString('base64')
-    //   }));
       handleClose();
+      navigate('/');
     } catch (e) {
       setError('Ошибка при импорте кошелька. Проверьте правильность мнемоники.');
       dispatch(setStatus('error'));

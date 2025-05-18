@@ -6,6 +6,7 @@ import { uiReducer, UiState } from './slices/ui/uiSlice';
 import { swapReducer } from './slices/swap/swapSlice';
 import { authReducer } from './slices/auth/authSlice';
 import { riskReducer } from './slices/risk/riskSlice';
+import notificationsReducer from './slices/notifications/notificationsSlice';
 
 const walletPersistConfig = {
   key: 'wallet',
@@ -26,6 +27,7 @@ export const store = configureStore({
     swap: swapReducer,
     auth: authReducer,
     risk: riskReducer,
+    notifications: notificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

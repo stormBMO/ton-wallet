@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import apiClient from '@/api/axios';
+import { createSlice } from '@reduxjs/toolkit';
 import { RiskMetrics } from './types';
+import { fetchRiskMetrics } from '@/store/thunks/risk';
   
 export interface RiskState {
   byToken: Record<string, RiskMetrics | undefined>;
@@ -14,33 +14,8 @@ const initialState: RiskState = {
   error: {},
 };
 
-export const fetchRiskMetrics = createAsyncThunk<
-  RiskMetrics, // Тип возвращаемого значения при успехе
-  { address: string }, // Тип аргумента thunk
-  { rejectValue: string } // Тип значения при ошибке (от rejectWithValue)
->(
-  'risk/fetchRiskMetrics',
-  async ({ address }, { rejectWithValue }) => {
-    try {
-      const response = await apiClient.post<RiskMetrics>('/api/risk/calculate', {
-        address,
-        period: 30,
-      });
-      return response.data;
-    } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.detail) {
-        return rejectWithValue(error.response.data.detail as string);
-      }
-      if (error.message) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('Failed to fetch risk metrics');
-    }
-  }
-);
-
 const riskSlice = createSlice({
-  name: 'risk',
+  name: 'risk', 
   initialState,
   reducers: {},
   extraReducers: (builder) => {

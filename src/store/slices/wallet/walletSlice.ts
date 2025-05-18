@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { JettonBalance, Network } from './types';
-import { fetchBalances, fetchRiskScore } from '@/store/thunks/wallet';
+import { Network, Token } from './types';
+import { fetchRiskMetrics } from '@/store/thunks/risk';
+import { loadWalletData } from '@/store/thunks/wallet';
 
 export interface WalletState {
   address: string | null;
@@ -8,8 +9,8 @@ export interface WalletState {
   network: Network;
   status: 'idle' | 'loading' | 'connected' | 'error';
   error: string | null;
-  tonBalance: string;
-  jettonBalances: JettonBalance[];
+  tokens: Token[];              // [{ address,symbol,name,balance, priceTon? }]
+  totalTonValue: string;        // суммарная стоимость всех токенов в TON
   riskScore: number;
   isLoading: boolean;
 }
@@ -20,8 +21,8 @@ const initialState: WalletState = {
   network: 'testnet',
   status: 'idle',
   error: null,
-  tonBalance: '0',
-  jettonBalances: [],
+  tokens: [],
+  totalTonValue: '0',
   riskScore: 0,
   isLoading: false,
 };
@@ -50,34 +51,55 @@ export const walletSlice = createSlice({
       state.error = action.payload;
       state.status = 'error';
     },
+    setTokens: (state, action: PayloadAction<Token[]>) => {
+      state.tokens = action.payload;
+    },
+    updateRates: (state, action: PayloadAction<{ address: string; priceTon: string }[]>) => {
+      // Обновляем курсы и пересчитываем общую стоимость
+      let totalValue = 0;
+      
+      state.tokens = state.tokens.map(token => {
+        const rateInfo = action.payload.find(rate => rate.address === token.address);
+        if (rateInfo) {
+          token.priceTon = rateInfo.priceTon;
+          
+          // Добавляем к общей стоимости
+          if (token.balance && token.priceTon) {
+            totalValue += parseFloat(token.balance) * parseFloat(token.priceTon);
+          }
+        }
+        return token;
+      });
+      
+      state.totalTonValue = totalValue.toFixed(4);
+    },
     resetWallet: () => {
       return initialState;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchBalances.pending, (state) => {
+      .addCase(loadWalletData.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchBalances.fulfilled, (state, action) => {
-        state.tonBalance = action.payload.tonBalance;
-        state.jettonBalances = action.payload.jettonBalances;
+      .addCase(loadWalletData.fulfilled, (state, action) => {
+        state.tokens = action.payload;
         state.isLoading = false;
       })
-      .addCase(fetchBalances.rejected, (state, action) => {
+      .addCase(loadWalletData.rejected, (state, action) => {
         state.error = action.payload as string || 'Failed to fetch balances';
         state.isLoading = false;
       })
-      .addCase(fetchRiskScore.pending, (state) => {
+      .addCase(fetchRiskMetrics.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchRiskScore.fulfilled, (state, action) => {
-        state.riskScore = action.payload;
+      .addCase(fetchRiskMetrics.fulfilled, (state, action) => {
+        state.riskScore = action.payload.contract_risk;
         state.isLoading = false;
       })
-      .addCase(fetchRiskScore.rejected, (state, action) => {
+      .addCase(fetchRiskMetrics.rejected, (state, action) => {
         state.error = action.payload as string || 'Failed to fetch risk score';
         state.isLoading = false;
       });
@@ -91,6 +113,8 @@ export const {
   setStatus,
   setError,
   resetWallet,
+  setTokens,
+  updateRates
 } = walletSlice.actions;
 
 export const walletReducer = walletSlice.reducer; 

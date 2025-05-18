@@ -7,17 +7,19 @@ import CreateWalletModal from './components/modals/CreateWalletModal';
 import { Dashboard } from './pages/DashboardPage';
 import ConnectWalletModal from './components/modals/ConnectWalletModal';
 import { ImportWalletModal } from './components/modals/ImportWalletModal';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
   return (
 	<PersistGate loading={null} persistor={persistor}>
 	  <Router>
-		<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+		<div className="min-h-screen">
 		  <Header />
 		  <Routes>
 			<Route path="/" element={<Dashboard />} />
 			<Route path="/connect-wallet" element={<ConnectWalletModal />} />
 			<Route path="/swap" element={<SwapPage />} />
+			<Route path="/settings" element={<SettingsPage />} />
 		  </Routes>
 		  <ConnectWalletModal />
 		  <CreateWalletModal />

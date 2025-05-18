@@ -1,22 +1,28 @@
-export interface Price {
-  price: number;
-  timestamp: number;
-}
+import { createAsyncThunk } from "@reduxjs/toolkit";
+import { RiskMetrics } from "../slices/risk/types";
+import { RootState } from "..";
+import apiClient from "@/api/axios";
 
-export const calculateVolatility = (prices: Price[]): number => {
-  if (prices.length < 2) return 0;
-
-  const returns = prices.slice(1).map((price, i) => {
-    const prevPrice = prices[i].price;
-    return Math.log(price.price / prevPrice);
-  });
-
-  const mean = returns.reduce((sum, ret) => sum + ret, 0) / returns.length;
-  const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - mean, 2), 0) / returns.length;
-  return Math.sqrt(variance * 252) * 100;
-};
-
-export const calculateRiskScore = (volatility: number): number => {
-  const maxVolatility = 100;
-  return Math.min(Math.max((volatility / maxVolatility) * 100, 0), 100);
-}; 
+export const fetchRiskMetrics = createAsyncThunk<
+  RiskMetrics,
+  { address: string },
+  { rejectValue: string }
+>(
+  'risk/fetchRiskMetrics',
+  async ({ address }, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post<RiskMetrics>('/api/risk/calculate', {        
+            token_address: address,
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response && error.response.data && error.response.data.detail) {
+        return rejectWithValue(error.response.data.detail as string);
+      }
+      if (error.message) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('Failed to fetch risk metrics');
+    }
+  }
+);

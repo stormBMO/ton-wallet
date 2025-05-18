@@ -5,10 +5,11 @@ import { setCreateWalletModalOpen, setConnectWalletModalOpen } from '../store/sl
 import { resetWallet, setNetwork, setAddress, setMnemonic, setStatus } from '../store/slices/wallet/walletSlice';
 import { mnemonicToWalletKey } from '@ton/crypto';
 import { WalletContractV4 } from '@ton/ton';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AuroraText } from './magicui/aurora-text';
 import { useWalletAuth } from '../hooks/useWalletAuth';
 import { useNavigate } from 'react-router-dom';
+import { useNotify } from '@/hooks/useNotify';
 
 const Header = () => {
   const [tonConnectUI] = useTonConnectUI();
@@ -19,6 +20,7 @@ const Header = () => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
   const { isAuthenticated, address, login, logout } = useWalletAuth();
+  const notify = useNotify();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,6 +56,12 @@ const Header = () => {
     dispatch(setNetwork(newNetwork));
   };
 
+  const handleCopyAddress = useCallback(() => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      notify('success', 'Адрес скопирован в буфер');
+    }
+  }, [address]);
 
 
   const handleOpenConnectModal = () => {
@@ -62,30 +70,31 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/connect');
+    navigate('/connect-wallet');
   };
 
   return (
-    <header className="w-full bg-white/80 dark:bg-neutral-900/80 backdrop-blur border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between z-20 relative">
+    <header className="sticky top-0 w-full bg-white/70 dark:bg-[#14172b]/70 backdrop-blur supports-backdrop-blur:bg-white/70 border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between z-20 relative">
       <div className="flex items-center gap-6">
-        <AuroraText className="text-2xl font-extrabold tracking-tight select-none">Wallet</AuroraText>
+        <div className="text-2xl font-extrabold tracking-tight select-none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Wallet</div>
         <nav className="flex gap-4 ml-4">
-          <a href="/" className="text-gray-700 dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 font-medium transition">Дашборд</a>
-          <a href="/swap" className="text-gray-700 dark:text-gray-200 hover:text-blue-500 dark:hover:text-blue-400 font-medium transition">Своп</a>
+          <a href="/" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Дашборд</a>
+          <a href="/swap" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Своп</a>
+          <a href="/settings" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Настройки</a>
           <span className={`px-2 py-0.5 rounded text-xs font-semibold ml-2 ${wallet.network === 'testnet' ? 'bg-yellow-400 text-white' : 'bg-green-500 text-white'}`}>{wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}</span>
-          <button onClick={handleNetworkChange} className="ml-2 text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 font-medium transition">Сменить сеть</button>
+          <button onClick={handleNetworkChange} className="ml-2 text-xs px-2 py-0.5 rounded-xl bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 font-medium transition">Сменить сеть</button>
         </nav>
       </div>
       <div className="flex items-center gap-4">
         {isAuthenticated ? (
           <>
-            <span className="text-sm text-gray-600 dark:text-gray-400 font-mono bg-gray-100 dark:bg-neutral-800 px-3 py-1 rounded-lg">
+            <span className="text-sm text-gray-600 dark:text-gray-400 font-mono backdrop-blur-lg bg-white/10 dark:bg-white/5 px-3 py-1 rounded-lg shadow-sm" onClick={handleCopyAddress}>
               {address ? `${address.slice(0, 4)}…${address.slice(-4)}` : ''}
             </span>
-            <button onClick={handleLogout} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Выйти</button>
+            <button onClick={handleLogout} className="px-4 py-1.5 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold transition">Выйти</button>
           </>
         ) : (
-          <button onClick={handleOpenConnectModal} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition">Войти</button>
+          <button onClick={handleOpenConnectModal} className="px-4 py-1.5 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold transition">Войти</button>
         )}
       </div>
     </header>

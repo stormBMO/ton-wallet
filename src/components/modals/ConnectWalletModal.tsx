@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { setConnectWalletModalOpen, setCreateWalletModalOpen, setImportWalletModalOpen } from '../../store/slices/ui/uiSlice';
 import { useWalletAuth } from '../../hooks/useWalletAuth';
-import { useTonConnectUI } from '@tonconnect/ui-react';
+import { useTonConnectUI, WalletInfo } from '@tonconnect/ui-react';
 import { useNavigate } from 'react-router-dom';
 import styled from '@emotion/styled';
 import { AuthStatus } from '@/store/slices/auth/types';
@@ -71,12 +71,6 @@ const ConnectWalletModal: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tonConnectUI] = useTonConnectUI();
 
-  useEffect(() => {
-    if (authStatus === AuthStatus.SUCCEEDED) {
-      handleClose();
-    }
-  }, [authStatus]);
-
   if (!isOpen) return null;
 
   const handleClose = () => {
@@ -88,14 +82,23 @@ const ConnectWalletModal: React.FC = () => {
   const handleTonConnect = async () => {
     setIsSubmitting(true);
     try {
+      if (tonConnectUI.account) {
+        handleClose();
+        navigate('/dashboard');
+        return;
+      }
       await tonConnectUI.connectWallet();
-      const account = tonConnectUI.account;
-      if (account?.address && account?.publicKey) {
-        await login({ address: account.address, publicKey: account.publicKey });
+      const account = tonConnectUI.account as any;
+      if (account?.address) {
+        await login({ 
+          address: account.address, 
+          publicKey: account.publicKey || '', 
+          privateKey: Buffer.from('')
+        });
         handleClose();
         navigate('/dashboard');
       } else {
-        setMnemonicError('Не удалось получить адрес и публичный ключ');
+        setMnemonicError('Не удалось получить адрес кошелька');
       }
     } catch (e) {
       setMnemonicError('Ошибка подключения TonConnect');
@@ -118,6 +121,7 @@ const ConnectWalletModal: React.FC = () => {
         handleTonConnect()
     }
   };
+
 
   return ReactDOM.createPortal(
     <ModalBackdrop>

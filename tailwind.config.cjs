@@ -13,14 +13,8 @@ module.exports = {
     			border: 'hsl(var(--border))',
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
-    			primary: {
-    				DEFAULT: 'hsl(var(--primary))',
-    				foreground: 'hsl(var(--primary-foreground))'
-    			},
-    			secondary: {
-    				DEFAULT: 'hsl(var(--secondary))',
-    				foreground: 'hsl(var(--secondary-foreground))'
-    			},
+    			primary: '#7C3AED',
+    			secondary: '#23C1FF',
     			muted: {
     				DEFAULT: 'hsl(var(--muted))',
     				foreground: 'hsl(var(--muted-foreground))'
@@ -51,6 +45,9 @@ module.exports = {
     				'5': 'hsl(var(--chart-5))'
     			}
     		},
+    		fontFamily: {
+                sans: ['Inter', 'sans-serif']
+            },
     		borderRadius: {
     			lg: 'var(--radius)',
     			md: 'calc(var(--radius) - 2px)',

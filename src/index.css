@@ -68,8 +68,12 @@
     @apply border-[hsl(var(--border))];
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-[#fafbff] to-[#eef4ff] text-gray-900 dark:from-[#101322] dark:to-[#0b0f1e];
   }
+}
+
+.glasscard {
+  @apply backdrop-blur-lg bg-white/5 dark:bg-white/10 shadow-lg rounded-2xl;
 }
 
 .grid-background {

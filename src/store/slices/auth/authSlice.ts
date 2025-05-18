@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import apiClient from '@/api/axios';
 import { AuthStatus } from './types';
+import { sign, signVerify } from '@ton/crypto';
 
 export interface AuthState {
   jwt: string | null;
@@ -18,18 +19,20 @@ const initialState: AuthState = {
 
 export const loginWithWallet = createAsyncThunk(
   'auth/loginWithWallet',
-  async (payload: { address: string; publicKey: string; signature: string }, { rejectWithValue }) => {
+  async (payload: { address: string; publicKey: string; privateKey: Buffer }, { rejectWithValue }) => {
     try {
       const nonceResponse = await apiClient.get('/api/auth/request_nonce');
       const { nonce } = nonceResponse.data;
 
-      // const signature = await signNonceWithWallet(nonce, payload.address, payload.publicKey);
-
+      const signature = sign(Buffer.from(nonce, 'hex'), payload.privateKey);
+      
+      const signatureBase64 = Buffer.from(signature).toString('base64');
+      
       const verifyResponse = await apiClient.post('/api/auth/verify_signature', {
         address: payload.address,
         public_key: payload.publicKey,
         nonce,
-        signature: payload.signature,
+        signature: signatureBase64,
       });
 
       const { access_token } = verifyResponse.data;

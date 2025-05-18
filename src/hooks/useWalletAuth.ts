@@ -7,7 +7,7 @@ export const useWalletAuth = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { jwt, status, error, address } = useSelector((state: RootState) => state.auth);
 
-  const handleLogin = useCallback(async (payload: { address: string; publicKey: string; signature: string }) => {
+  const handleLogin = useCallback(async (payload: { address: string; publicKey: string; privateKey: Buffer }) => {
     return dispatch(loginWithWallet(payload)).unwrap(); // теперь возвращает { jwt, address }
   }, [dispatch]);
 

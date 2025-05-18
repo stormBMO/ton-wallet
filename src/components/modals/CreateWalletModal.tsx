@@ -43,7 +43,7 @@ const CreateWalletModal = () => {
       const address = wallet.address.toString();
       dispatch(setAddress(address));
       
-      await login({ address, publicKey: Buffer.from(key.publicKey).toString('hex'), signature: Buffer.from(key.secretKey).toString('base64') });
+      await login({ address, publicKey: Buffer.from(key.publicKey).toString('hex'), privateKey: key.secretKey });
       dispatch(setStatus('connected'));
     } catch (error) {
       console.error('Failed to generate address:', error);

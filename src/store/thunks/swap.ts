@@ -1,44 +1,53 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { WalletAdapter } from "../slices/wallet/types";
-import axios from 'axios';
 import TonWeb from 'tonweb';
+import { RootState } from "../index";
+import { fetchQuoteFromAPI, fetchUserTokensFromAPI, sendSwapTransaction, convertAmount } from "@/api/swapApi";
+import { TonConnectUI } from '@tonconnect/ui-react';
 
 // Базовые функции
-export const getQuote = async ({ 
-  fromToken, 
-  toToken, 
-  amount, 
-  userAddress, 
-  network = 'testnet' 
-}: { 
-  fromToken: string; 
-  toToken: string; 
-  amount: string; 
-  userAddress: string; 
-  network?: 'testnet' | 'mainnet' 
-}) => {
-  // Используем DeDust API для получения котировки
-  const apiUrl = network === 'testnet' 
-    ? 'https://api-testnet.dedust.io/v2/quote'
-    : 'https://api.dedust.io/v2/quote';
+export const getQuote = createAsyncThunk(
+  'swap/getQuote',
+  async ({ 
+    fromToken, 
+    toToken, 
+    amount
+  }: { 
+    fromToken: string; 
+    toToken: string; 
+    amount: string; 
+  }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      const userAddress = state.wallet.address;
+      const network = state.wallet.network;
 
-  const response = await axios.post(apiUrl, {
-    address: userAddress,
-    jetton_master_in: fromToken === 'TON' ? null : fromToken,
-    jetton_master_out: toToken === 'TON' ? null : toToken,
-    amount: amount,
-    slippage: 0.5 // 0.5% slippage
-  });
+      if (!userAddress) {
+        return rejectWithValue('Кошелек не подключен');
+      }
 
-  return {
-    ...response.data,
-    fromToken,
-    toToken,
-    amount,
-    userAddress,
-    network
-  };
-};
+      const amountInNano = convertAmount.toNano(amount);
+      const quote = await fetchQuoteFromAPI({ 
+        fromToken, 
+        toToken, 
+        amount: amountInNano, 
+        userAddress, 
+        network 
+      });
+
+      return {
+        ...quote,
+        fromToken,
+        toToken,
+        amount: amountInNano,
+        amountFormatted: amount,
+        expectedAmount: convertAmount.fromNano(quote.expected_amount),
+        minAmountOut: convertAmount.fromNano(quote.min_amount_out),
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка получения котировки');
+    }
+  }
+);
 
 export const calcFee = async ({ fromToken, toToken, amount, network = 'mainnet' }: { 
   fromToken: string; 
@@ -65,149 +74,70 @@ export const calcFee = async ({ fromToken, toToken, amount, network = 'mainnet' 
   };
 };
 
-export const checkBalance = async ({ 
-  walletAdapter, 
-  token, 
-  amount 
-}: { 
-  walletAdapter: WalletAdapter; 
-  token: string; 
-  amount: string 
-}) => {
-  try {
-    // Получаем баланс пользователя для указанного токена
-    const balance = await walletAdapter.getBalance(token === 'TON' ? undefined : token);
-    
-    // Преобразуем сумму и баланс в наноTON или наноJetton для сравнения
-    let amountInNano;
-    if (token === 'TON') {
-      amountInNano = TonWeb.utils.toNano(amount);
-    } else {
-      // Для Jetton проверка должна быть в соответствующих единицах
-      amountInNano = TonWeb.utils.toNano(amount); // Предполагая, что Jetton имеет 9 десятичных знаков как TON
-    }
-    
-    // Проверяем, достаточно ли средств
-    const hasEnoughBalance = BigInt(balance) >= BigInt(amountInNano);
-    
-    return hasEnoughBalance;
-  } catch (error) {
-    console.error('Error checking balance:', error);
-    throw new Error('Не удалось проверить баланс');
-  }
-};
-
-export const performSwap = async ({ 
-  walletAdapter, 
-  quote 
-}: { 
-  walletAdapter: WalletAdapter; 
-  quote: any 
-}) => {
-  try {
-    const { 
-      fromToken, 
-      toToken, 
-      amount, 
-      userAddress, 
-      network, 
-      pool_address, 
-      expected_amount,
-      min_amount_out,
-      message_body
-    } = quote;
-
-    // Создаем транзакцию для отправки
-    let transaction;
-    
-    if (fromToken === 'TON') {
-      // Своп TON на Jetton
-      transaction = {
-        to: pool_address,
-        amount: amount, // уже в нанотонах
-        payload: message_body,
-      };
-    } else {
-      // Своп Jetton на TON или другой Jetton
-      // Необходимо создать payload для вызова методов контракта Jetton
-      transaction = {
-        to: pool_address,
-        amount: TonWeb.utils.toNano('0.1'), // минимальная сумма для покрытия gas fee
-        payload: message_body, // специальный payload для свопа Jetton
-        stateInit: quote.state_init
-      };
-    }
-
-    // Отправляем транзакцию
-    const result = await walletAdapter.sendTx(transaction);
-
-    return {
-      success: true,
-      txHash: result.txHash || result.id || result,
-      fromToken,
-      toToken,
-      amount,
-      expectedAmount: expected_amount,
-      minAmountOut: min_amount_out,
-      userAddress
-    };
-  } catch (error) {
-    console.error('Error performing swap:', error);
-    throw new Error('Не удалось выполнить своп');
-  }
-};
-
-export const getUserTokens = async (
-  address: string, 
-  network: 'mainnet' | 'testnet' = 'mainnet'
-) => {
-  try {
-    // Выбор API-эндпоинта в зависимости от сети
-    const apiBase = network === 'testnet' 
-      ? 'https://testnet.tonapi.io/v2/accounts'
-      : 'https://tonapi.io/v2/accounts';
-
-    // Получаем данные о балансе TON
-    const [tonResponse, jettonsResponse] = await Promise.all([
-      axios.get(`${apiBase}/${address}`),
-      axios.get(`${apiBase}/${address}/jettons`)
-    ]);
-
-    // Получаем баланс TON
-    const tonBalance = TonWeb.utils.fromNano(tonResponse.data.balance);
-    
-    // Формируем массив токенов
-    const tokens = [
-      {
-        symbol: 'TON',
-        name: 'Toncoin',
-        balance: tonBalance,
-        address: 'TON', // Используем 'TON' как идентификатор для нативного токена
-        icon: 'https://static.tildacdn.com/tild3966-6664-4032-a130-333061376633/ton_symbol.svg'
-      }
-    ];
-
-    // Добавляем информацию о Jetton-токенах
-    if (jettonsResponse.data && jettonsResponse.data.balances) {
-      const jettonBalances = jettonsResponse.data.balances.map((jetton: any) => {
-        return {
-          symbol: jetton.metadata?.symbol || 'Unknown',
-          name: jetton.metadata?.name || 'Unknown Token',
-          balance: TonWeb.utils.fromNano(jetton.balance),
-          address: jetton.jetton.address,
-          icon: jetton.metadata?.image || ''
-        };
-      });
+export const checkBalance = createAsyncThunk(
+  'swap/checkBalance',
+  async ({ 
+    token, 
+    amount 
+  }: { 
+    token: string; 
+    amount: string;
+  }, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      const userTokens = state.swap.userTokens;
       
-      tokens.push(...jettonBalances);
+      // Находим токен в списке токенов пользователя
+      const userToken = userTokens.find(t => t.symbol === token);
+      
+      if (!userToken) {
+        return rejectWithValue(`Токен ${token} не найден в кошельке`);
+      }
+      
+      // Преобразуем сумму в нано для сравнения
+      const amountInNano = convertAmount.toNano(amount);
+      
+      // Проверяем, достаточно ли средств
+      const hasEnoughBalance = BigInt(userToken.balance) >= BigInt(amountInNano);
+      
+      return {
+        hasEnoughBalance,
+        token,
+        amount,
+        amountInNano,
+        balance: userToken.balance,
+        balanceFormatted: convertAmount.fromNano(userToken.balance)
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Не удалось проверить баланс');
     }
-
-    return tokens;
-  } catch (error) {
-    console.error('Error fetching user tokens:', error);
-    throw new Error('Не удалось получить список токенов пользователя');
   }
-};
+);
+
+export const getUserTokens = createAsyncThunk(
+  'swap/getUserTokens',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as RootState;
+      const address = state.wallet.address;
+      const network = state.wallet.network;
+
+      if (!address) {
+        return rejectWithValue('Кошелек не подключен');
+      }
+
+      const tokens = await fetchUserTokensFromAPI(address, network);
+      
+      // Форматируем балансы для отображения
+      return tokens.map(token => ({
+        ...token,
+        balanceFormatted: convertAmount.fromNano(token.balance)
+      }));
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Не удалось получить список токенов пользователя');
+    }
+  }
+);
 
 // Thunks
 export const fetchQuote = createAsyncThunk<
@@ -222,83 +152,101 @@ export const fetchQuote = createAsyncThunk<
   }
 });
 
-export const checkUserBalance = createAsyncThunk<
-  boolean,
-  { walletAdapter: WalletAdapter; token: string; amount: string },
-  { rejectValue: string }
->('swap/checkBalance', async (params, { rejectWithValue }) => {
-  try {
-    return await checkBalance(params);
-  } catch (e: any) {
-    return rejectWithValue(e.message || 'Ошибка проверки баланса');
-  }
-});
-
-export const performSwapThunk = createAsyncThunk<
-  any,
-  { walletAdapter: WalletAdapter; quote: any },
-  { rejectValue: string }
->('swap/performSwap', async (params, { rejectWithValue }) => {
-  try {
-    return await performSwap(params);
-  } catch (e: any) {
-    return rejectWithValue(e.message || 'Ошибка свопа');
-  }
-});
-
-export const fetchUserTokens = createAsyncThunk<
-  Array<{ symbol: string; name: string; balance: string; address: string; icon?: string }>,
-  { address: string; network?: 'mainnet' | 'testnet' },
-  { rejectValue: string }
->('swap/fetchUserTokens', async (params, { rejectWithValue }) => {
-  try {
-    return await getUserTokens(params.address, params.network);
-  } catch (e: any) {
-    return rejectWithValue(e.message || 'Ошибка получения токенов пользователя');
-  }
-});
-
 export const swapThunk = createAsyncThunk(
   'swap/perform',
-  async (
-    {
-      fromToken,
-      toToken,
-      amount,
-      walletAdapter,
-      userAddress,
-      network,
-    }: {
-      fromToken: string;
-      toToken: string;
-      amount: string; // в нанотокенах
-      walletAdapter: WalletAdapter;
-      userAddress: string;
-      network?: 'testnet' | 'mainnet';
-    },
-    { rejectWithValue }
-  ) => {
+  async ({ 
+    fromToken,
+    toToken,
+    amount,
+    tonConnectUI
+  }: {
+    fromToken: string;
+    toToken: string;
+    amount: string;
+    tonConnectUI: TonConnectUI;
+  }, { getState, dispatch, rejectWithValue }) => {
     try {
-      // Получаем котировку
-      const quote = await getQuote({ fromToken, toToken, amount, userAddress, network });
+      const state = getState() as RootState;
+      const userAddress = state.wallet.address;
+      const network = state.wallet.network;
+      const walletType = state.swap.walletType;
+
+      if (!userAddress) {
+        return rejectWithValue('Кошелек не подключен');
+      }
+
+      // Конвертируем в нано
+      const amountInNano = convertAmount.toNano(amount);
       
-      // Проверяем баланс
-      const hasBalance = await checkBalance({ 
-        walletAdapter, 
-        token: fromToken, 
-        amount 
+      // Получаем котировку
+      const quote = await fetchQuoteFromAPI({ 
+        fromToken, 
+        toToken, 
+        amount: amountInNano, 
+        userAddress, 
+        network 
       });
       
-      if (!hasBalance) {
-        throw new Error('Недостаточно средств для свопа');
+      // Проверяем баланс через наш thunk
+      const checkBalanceResult = await dispatch(checkBalance({ 
+        token: fromToken, 
+        amount 
+      }));
+      
+      // Обрабатываем результат проверки баланса
+      if (checkBalanceResult.type === 'swap/checkBalance/fulfilled') {
+        if (!checkBalanceResult.payload.hasEnoughBalance) {
+          return rejectWithValue('Недостаточно средств для свопа');
+        }
+      } else {
+        return rejectWithValue('Не удалось проверить баланс');
       }
       
-      // Выполняем своп
-      const result = await performSwap({ walletAdapter, quote });
+      // Подготовка транзакции
+      let transactionData;
       
-      return result;
-    } catch (e: any) {
-      return rejectWithValue(e.message || 'Ошибка свопа');
+      if (fromToken === 'TON') {
+        // Своп TON на Jetton
+        transactionData = {
+          to: quote.pool_address,
+          amount: amountInNano,
+          payload: quote.message_body,
+        };
+      } else {
+        // Своп Jetton на TON или другой Jetton
+        transactionData = {
+          to: quote.pool_address,
+          amount: convertAmount.toNano('0.1'), // минимальная сумма для покрытия gas fee
+          payload: quote.message_body,
+          stateInit: quote.state_init
+        };
+      }
+      
+      // Отправка транзакции
+      let result;
+      
+      if (walletType === 'tonconnect') {
+        if (!tonConnectUI) {
+          return rejectWithValue('TonConnect UI не инициализирован');
+        }
+        result = await sendSwapTransaction(transactionData, tonConnectUI);
+      } else {
+        return rejectWithValue('В данный момент поддерживается только TonConnect');
+      }
+      
+      return {
+        success: true,
+        txHash: typeof result === 'object' ? (result.boc || result.txHash || result) : result,
+        fromToken,
+        toToken,
+        amount: amountInNano,
+        amountFormatted: amount,
+        expectedAmount: convertAmount.fromNano(quote.expected_amount),
+        minAmountOut: convertAmount.fromNano(quote.min_amount_out),
+        userAddress
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Ошибка свопа');
     }
   }
 ); 
