@@ -1,11 +1,25 @@
 import { motion } from 'framer-motion';
 import { fadeIn, staggerContainer } from '../lib/motion';
 import { TokenCard } from '../components/ui/TokenCard';
+import { ReceiveModal } from '@/components/modals/ReceiveModal';
 import '../index.css';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useReceiveModal } from '@/hooks/useReceiveModal';
+import { BalanceCard } from '@/components/BalanceCard';
+import { AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react';
+import { TokenDetailModal } from '@/components/modals/TokenDetailModal';
 
 export const Dashboard = () => {
   const { isBalancesLoading, dataError, displayTokens, isAuthenticated, authStatus, walletAddress, totalTonValue } = useDashboard();
+  const {
+    openReceiveModal,
+    closeReceiveModal,
+    isReceiveModalOpen,
+    receiveModalData,
+  } = useReceiveModal();
+
+  const [selectedTokenAddress, setSelectedTokenAddress] = useState<string | null>(null);
 
   if (authStatus === 'loading') {
     return (
@@ -36,6 +50,29 @@ export const Dashboard = () => {
   const tonTokenForDisplay = displayTokens.find(token => token.symbol === 'TON');
   const otherTokensForDisplay = displayTokens.filter(token => token.symbol !== 'TON');
 
+  const handleDeposit = () => {
+    if (walletAddress) {
+      openReceiveModal({ symbol: 'TON', address: walletAddress }, walletAddress);
+    }
+  };
+
+  const handleWithdraw = () => {
+    alert('Функция вывода средств в разработке!');
+    console.log('Withdraw clicked');
+  };
+
+  const handleTokenCardClick = (address: string) => {
+    setSelectedTokenAddress(address);
+  };
+
+  const handleCloseDetailModal = () => {
+    setSelectedTokenAddress(null);
+  };
+
+  const selectedTokenData = selectedTokenAddress 
+    ? displayTokens.find(token => token.address === selectedTokenAddress) 
+    : null;
+
   return (
     <div className="min-h-screen px-4 py-10">
       <motion.div
@@ -51,14 +88,12 @@ export const Dashboard = () => {
           <span className="text-base text-gray-600 dark:text-gray-400 font-medium">Ваши активы и риски в TON</span>
         </div>
 
-        {/* Отображение общего баланса */}
-        <motion.div
-          variants={fadeIn}
-          className="glasscard p-6 text-center"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{totalTonValue} TON</h1>
-          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Общая стоимость всех активов</p>
-        </motion.div>
+        <BalanceCard
+          balance={totalTonValue}
+          currency="TON"
+          onDeposit={handleDeposit}
+          onWithdraw={handleWithdraw}
+        />
 
         {dataError && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-2xl mb-4" role="alert">
@@ -70,29 +105,51 @@ export const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {tonTokenForDisplay && (
             <TokenCard 
-              symbol="TON" 
+              key={tonTokenForDisplay.address || 'TON'}
+              symbol={tonTokenForDisplay.symbol} 
               balance={tonTokenForDisplay?.balance || (isBalancesLoading ? '...' : '0')}
-              risk={tonTokenForDisplay?.risk?.sigma30d}
+              priceTon={tonTokenForDisplay.priceTon}
+              riskData={tonTokenForDisplay.risk}
+              address={tonTokenForDisplay.address || 'TON'}
+              onClick={handleTokenCardClick}
             />
           )}
           
-          {displayTokens.length === 0 ? (
+          {displayTokens.length === 0 && !tonTokenForDisplay ? (
             <div className="glasscard p-10 text-center text-gray-600 dark:text-gray-400">
               Нет активов
             </div>
           ) : (
             otherTokensForDisplay.map((token) => (
               <TokenCard 
-                key={token.symbol}
+                key={token.address || token.symbol}
                 symbol={token.symbol}
                 balance={token.balance || '0'}
                 priceTon={token.priceTon?.toString()}
-                risk={token.risk?.sigma30d}
+                riskData={token.risk}
+                address={token.address}
+                onClick={handleTokenCardClick}
               />
             ))
           )}
         </div>
+        {isReceiveModalOpen && receiveModalData && (
+          <ReceiveModal
+            token={receiveModalData.token}
+            userAddress={receiveModalData.userAddress}
+            onClose={closeReceiveModal}
+          />
+        )}
       </motion.div>
+
+      <AnimatePresence>
+        {selectedTokenData && (
+          <TokenDetailModal 
+            token={selectedTokenData} 
+            onClose={handleCloseDetailModal} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

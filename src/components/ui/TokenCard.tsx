@@ -2,12 +2,17 @@ import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
 
+// Определяем тип для объекта риска, если он известен, или используем any
+// interface RiskData { /* ... поля объекта риска ... */ }
+
 interface TokenCardProps {
   iconUrl?: string;
   symbol: string;
   balance: string;
   priceTon?: string;
-  risk?: number;
+  riskData?: any; // Заменили risk на riskData и тип на any (или RiskData)
+  address: string; // Сделаем адрес обязательным для layoutId и onClick
+  onClick?: (address: string) => void; // Добавили onClick
 }
 
 export const TokenCard: FC<TokenCardProps> = ({ 
@@ -15,29 +20,36 @@ export const TokenCard: FC<TokenCardProps> = ({
   symbol, 
   balance, 
   priceTon, 
-  risk 
+  riskData, 
+  address,
+  onClick
 }) => {
-  // Определим цвет риска (градиент от зеленого к красному)
+  const riskValue = riskData?.sigma30d; // Пример получения значения для отображения, если нужно
+
   const getRiskColor = () => {
-    if (risk === undefined || risk === null) return "bg-gray-300";
-    if (risk < 0.3) return "bg-gradient-to-r from-green-400 to-green-500";
-    if (risk < 0.6) return "bg-gradient-to-r from-yellow-400 to-orange-400";
+    if (riskValue === undefined || riskValue === null) return "bg-gray-300";
+    if (riskValue < 0.3) return "bg-gradient-to-r from-green-400 to-green-500";
+    if (riskValue < 0.6) return "bg-gradient-to-r from-yellow-400 to-orange-400";
     return "bg-gradient-to-r from-orange-500 to-red-500";
   };
 
   const getRiskLabel = () => {
-    if (risk === undefined || risk === null) return "Нет данных";
-    if (risk < 0.3) return "Низкий риск";
-    if (risk < 0.6) return "Средний риск";
+    if (riskValue === undefined || riskValue === null) return "Нет данных";
+    if (riskValue < 0.3) return "Низкий риск";
+    if (riskValue < 0.6) return "Средний риск";
     return "Высокий риск";
   };
 
   return (
     <motion.div 
-      variants={fadeIn}
+      layoutId={`token-card-${address || symbol}`} // Добавляем layoutId
+      variants={fadeIn} // Оставляем fadeIn или можно убрать, если layout анимация будет основной
       initial="hidden"
       animate="show"
-      className="glasscard p-5 flex flex-col gap-3"
+      className="glasscard p-5 flex flex-col gap-3 cursor-pointer" // Добавили cursor-pointer
+      onClick={() => onClick && address && onClick(address)} // Вызываем onClick
+      whileHover={{ y: -5 }} // Небольшой эффект при наведении для интерактивности
+      transition={{ type: "spring", stiffness: 300 }}
     >
       <div className="flex items-center gap-2">
         {iconUrl ? (
@@ -55,7 +67,8 @@ export const TokenCard: FC<TokenCardProps> = ({
       
       <div className="text-2xl font-semibold">{balance}</div>
       
-      {risk !== undefined && (
+      {/* Отображаем простой риск как и раньше, если нужно */}
+      {riskValue !== undefined && (
         <div className={`px-3 py-1 rounded-full text-xs font-medium text-white w-fit ${getRiskColor()}`}>
           {getRiskLabel()}
         </div>
@@ -64,4 +77,4 @@ export const TokenCard: FC<TokenCardProps> = ({
   );
 };
 
-export default TokenCard; 
+// export default TokenCard; // Если экспорт по умолчанию не нужен, можно убрать 

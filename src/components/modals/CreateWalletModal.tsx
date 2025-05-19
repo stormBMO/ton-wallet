@@ -8,7 +8,6 @@ import { WalletContractV4 } from '@ton/ton';
 import { wordlist } from '@scure/bip39/wordlists/english';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { AuthStatus } from '@/store/slices/auth/types';
-import { toHex } from '@/lib/utils';
 
 const CreateWalletModal = () => {
   const dispatch = useDispatch();

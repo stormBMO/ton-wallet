@@ -129,3 +129,9 @@
     }
   }
 }
+
+@layer components {
+  .btn-secondary {
+    @apply bg-primary/10 text-primary hover:bg-primary/20 rounded-lg px-3 py-1 text-sm font-medium flex items-center gap-1;
+  }
+}

@@ -19,10 +19,10 @@ export const SettingsPage = () => {
     // Здесь код для изменения языка
   };
 
-  const handleAutoLockChange = () => {
-    setAutoLock(!autoLock);
-    // Здесь код для настройки автоблокировки
-  };
+  // const handleAutoLockChange = () => {
+  //   setAutoLock(!autoLock);
+  //   // Здесь код для настройки автоблокировки
+  // };
 
   if (!isAuthenticated) {
     return (
@@ -126,7 +126,7 @@ export const SettingsPage = () => {
           </div>
 
           {/* Раздел безопасности */}
-          <div className="py-3 flex items-center justify-between">
+          {/* <div className="py-3 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Безопасность</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">Настройки безопасности</p>
@@ -146,7 +146,7 @@ export const SettingsPage = () => {
                 />
               </button>
             </div>
-          </div>
+          </div> */}
         </motion.div>
       </motion.div>
     </div>

@@ -29,16 +29,6 @@ const Header = () => {
     }
   }, [tonConnectUI.account?.address, dispatch]);
 
-  const handleConnect = async () => {
-    try {
-      setIsConnecting(true);
-      await tonConnectUI.connectWallet();
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  };
 
   const handleDisconnect = async () => {
     try {
@@ -68,8 +58,8 @@ const Header = () => {
     dispatch(setConnectWalletModalOpen(true));
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/connect-wallet');
   };
 

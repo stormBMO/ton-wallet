@@ -23,7 +23,7 @@ export interface BalanceCardProps {
 }
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency = 'TON', onDeposit, onWithdraw }) => (
-  <div className="rounded-2xl shadow-md bg-white dark:bg-neutral-900 p-6 flex flex-col items-center gap-4">
+  <div className="rounded-2xl glasscard p-6 flex flex-col items-center gap-4">
     <div className="text-gray-500 text-sm">Баланс</div>
     <div className="text-3xl font-bold text-gray-900 dark:text-white">{balance} {currency}</div>
     <div className="flex gap-2">
