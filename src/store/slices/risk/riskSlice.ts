@@ -10,38 +10,38 @@ export interface RiskState {
 }
 
 const initialState: RiskState = {
-  byToken: {},
-  status: {},
-  error: {},
-  apiType: 'v2',
+    byToken: {},
+    status: {},
+    error: {},
+    apiType: 'v2',
 };
 
 const riskSlice = createSlice({
-  name: 'risk', 
-  initialState,
-  reducers: {
-    setApiType(state, action) {
-      state.apiType = action.payload;
+    name: 'risk', 
+    initialState,
+    reducers: {
+        setApiType(state, action) {
+            state.apiType = action.payload;
+        },
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(fetchRiskMetrics.pending, (state, action) => {
-        const { address } = action.meta.arg;
-        state.status[address] = 'loading';
-        state.error[address] = null;
-      })
-      .addCase(fetchRiskMetrics.fulfilled, (state, action) => {
-        const { address } = action.meta.arg;
-        state.status[address] = 'succeeded';
-        state.byToken[address] = action.payload;
-      })
-      .addCase(fetchRiskMetrics.rejected, (state, action) => {
-        const { address } = action.meta.arg;
-        state.status[address] = 'failed';
-        state.error[address] = action.payload;
-      });
-  },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchRiskMetrics.pending, (state, action) => {
+                const { address } = action.meta.arg;
+                state.status[address] = 'loading';
+                state.error[address] = null;
+            })
+            .addCase(fetchRiskMetrics.fulfilled, (state, action) => {
+                const { address } = action.meta.arg;
+                state.status[address] = 'succeeded';
+                state.byToken[address] = action.payload;
+            })
+            .addCase(fetchRiskMetrics.rejected, (state, action) => {
+                const { address } = action.meta.arg;
+                state.status[address] = 'failed';
+                state.error[address] = action.payload;
+            });
+    },
 });
 
 export const { setApiType } = riskSlice.actions;

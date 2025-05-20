@@ -30,13 +30,13 @@ import './index.css';
 const manifestUrl = 'https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <TonConnectUIProvider manifestUrl={manifestUrl}>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </TonConnectUIProvider>
-    </Provider>
-  </React.StrictMode>
+    <React.StrictMode>
+        <Provider store={store}>
+            <TonConnectUIProvider manifestUrl={manifestUrl}>
+                <ToastProvider>
+                    <App />
+                </ToastProvider>
+            </TonConnectUIProvider>
+        </Provider>
+    </React.StrictMode>
 );

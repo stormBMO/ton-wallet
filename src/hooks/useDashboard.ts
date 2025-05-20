@@ -14,73 +14,68 @@ import { fetchRiskMetrics } from '@/store/thunks/risk';
 import { selectTokens, selectTotalTonValue } from '@/store/selectors/wallet';
 
 export const useDashboard = () => {
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  const notify = useNotify();
+    const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
+    const notify = useNotify();
 
-  const { isAuthenticated, authStatus } = useWalletAuth();
-  const { address: walletAddress, network, status: walletStatus, error: walletError } =
+    const { isAuthenticated, authStatus } = useWalletAuth();
+    const { address: walletAddress, network, status: walletStatus, error: walletError } =
     useSelector((s: RootState) => s.wallet);
 
-  const tokens = useSelector(selectTokens);
-  const totalTonValue = useSelector(selectTotalTonValue);
+    const tokens = useSelector(selectTokens);
+    const totalTonValue = useSelector(selectTotalTonValue);
 
-  const { byToken: riskByToken, status: riskStatusMap, error: riskErrorMap, apiType } =
-    useSelector((s: RootState) => s.risk);
+    const { byToken: riskByToken, status: riskStatusMap, error: riskErrorMap } =
+      useSelector((s: RootState) => s.risk);
 
-  useEffect(() => {
-    if (authStatus !== AuthStatus.LOADING && !isAuthenticated) {
-      navigate('/connect-wallet');
-      dispatch(setConnectWalletModalOpen(true));
-    }
-  }, [isAuthenticated, authStatus, navigate, dispatch]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !walletAddress) return;
-    dispatch(loadWalletData({ address: walletAddress, network }))
-      .unwrap()
-      .catch(err => {
-        if (err === 'WALLET_NOT_FOUND') {
-          notify('error', 'Кошелек не существует');
-        } else {
-          notify('error', 'Ошибка загрузки данных кошелька');
+    useEffect(() => {
+        if (authStatus !== AuthStatus.LOADING && !isAuthenticated) {
+            dispatch(setConnectWalletModalOpen(true));
         }
-      });
-  }, [isAuthenticated, walletAddress, network, dispatch, notify]);
+    }, [isAuthenticated, authStatus, navigate, dispatch]);
 
-  useEffect(() => {
-    if (tokens.length && !tokens.every(t => t.priceTon)) {
-      dispatch(fetchTonRates({ network }));
-    }
-  }, [tokens, network, dispatch]);
+    useEffect(() => {
+        if (!isAuthenticated || !walletAddress) return;
+        dispatch(loadWalletData({ address: walletAddress, network }))
+            .unwrap()
+            .catch(err => {
+                notify('error', `Ошибка загрузки данных кошелька: ${err}`);
+            });
+    }, [isAuthenticated, walletAddress, network, dispatch, notify]);
 
-  // Загружаем риск-метрики из второй ручки (risk_v2)
-  useEffect(() => {
-    if (!isAuthenticated || !walletAddress) return;
-    tokens.forEach(token => {
-      if (token.address) {
-        dispatch(fetchRiskMetrics({ address: token.address, apiType: 'v2' }));
-      }
-    });
-  }, [tokens, isAuthenticated, walletAddress, dispatch]);
+    useEffect(() => {
+        if (tokens.length && !tokens.every(t => t.priceTon)) {
+            dispatch(fetchTonRates({ network }));
+        }
+    }, [tokens, network, dispatch]);
 
-  const displayTokens = useMemo(() => {
-    return tokens.map(token => ({
-      ...token,
-      risk:       riskByToken[token.address],
-      riskStatus: riskStatusMap[token.address],
-      riskError:  riskErrorMap[token.address],
-    }));
-  }, [tokens, riskByToken, riskStatusMap, riskErrorMap]);
+    // Загружаем риск-метрики из второй ручки (risk_v2)
+    useEffect(() => {
+        if (!isAuthenticated || !walletAddress) return;
+        tokens.forEach(token => {
+            if (token.address) {
+                dispatch(fetchRiskMetrics({ address: token.address, apiType: 'v2' }));
+            }
+        });
+    }, [tokens, isAuthenticated, walletAddress, dispatch]);
 
-  return {
-    isBalancesLoading : walletStatus === 'loading',
-    dataError         : walletError,
-    displayTokens,
-    totalTonValue,
-    isAuthenticated,
-    authStatus,
-    walletAddress,
-    network,
-  };
+    const displayTokens = useMemo(() => {
+        return tokens.map(token => ({
+            ...token,
+            risk:       riskByToken[token.address],
+            riskStatus: riskStatusMap[token.address],
+            riskError:  riskErrorMap[token.address],
+        }));
+    }, [tokens, riskByToken, riskStatusMap, riskErrorMap]);
+
+    return {
+        isBalancesLoading : walletStatus === 'loading',
+        dataError         : walletError,
+        displayTokens,
+        totalTonValue,
+        isAuthenticated,
+        authStatus,
+        walletAddress,
+        network,
+    };
 };

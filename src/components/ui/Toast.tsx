@@ -9,18 +9,18 @@ interface ToastProps {
 }
 
 const getBackgroundColor = (type: ToastType) => {
-  switch (type) {
+    switch (type) {
     case 'success':
-      return '#10B981';
+        return '#10B981';
     case 'error':
-      return '#EF4444';
+        return '#EF4444';
     case 'warning':
-      return '#F59E0B';
+        return '#F59E0B';
     case 'info':
-      return '#3B82F6';
+        return '#3B82F6';
     default:
-      return '#3B82F6';
-  }
+        return '#3B82F6';
+    }
 };
 
 const ToastContainer = styled.div<{ type: ToastType }>`
@@ -57,10 +57,10 @@ const CloseButton = styled.button`
 `;
 
 export const Toast: FC<ToastProps> = ({ type, message, onClose }) => {
-  return (
-    <ToastContainer type={type}>
-      <Message>{message}</Message>
-      <CloseButton onClick={onClose}>×</CloseButton>
-    </ToastContainer>
-  );
+    return (
+        <ToastContainer type={type}>
+            <Message>{message}</Message>
+            <CloseButton onClick={onClose}>×</CloseButton>
+        </ToastContainer>
+    );
 }; 

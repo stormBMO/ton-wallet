@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from '@emotion/styled';
-import { Button } from './Button';
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 const BalanceValue = styled.div`
@@ -23,22 +22,22 @@ export interface BalanceCardProps {
 }
 
 export const BalanceCard: React.FC<BalanceCardProps> = ({ balance, currency = 'TON', onDeposit, onWithdraw }) => (
-  <div className="rounded-2xl glasscard p-6 flex flex-col items-center gap-4">
-    <div className="text-gray-500 text-sm">Баланс</div>
-    <div className="text-3xl font-bold text-gray-900 dark:text-white">{balance} {currency}</div>
-    <div className="flex gap-2">
-      <button
-        onClick={onDeposit}
-        className="flex items-center gap-2 bg-ton-blue text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-ton-blue/90 transition"
-      >
-        <FaArrowDown /> Пополнить
-      </button>
-      <button
-        onClick={onWithdraw}
-        className="flex items-center gap-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
-      >
-        <FaArrowUp /> Вывести
-      </button>
+    <div className="rounded-2xl glasscard p-6 flex flex-col items-center gap-4">
+        <div className="text-gray-500 text-sm">Баланс</div>
+        <div className="text-3xl font-bold text-gray-900 dark:text-white">{balance} {currency}</div>
+        <div className="flex gap-2">
+            <button
+                onClick={onDeposit}
+                className="flex items-center gap-2 bg-ton-blue text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-ton-blue/90 transition"
+            >
+                <FaArrowDown /> Пополнить
+            </button>
+            <button
+                onClick={onWithdraw}
+                className="flex items-center gap-2 bg-gray-100 dark:bg-neutral-800 text-gray-700 dark:text-gray-200 rounded-lg px-4 py-2 text-sm font-medium hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
+            >
+                <FaArrowUp /> Вывести
+            </button>
+        </div>
     </div>
-  </div>
 ); 

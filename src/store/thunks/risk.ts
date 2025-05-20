@@ -10,19 +10,19 @@ export const fetchRiskMetrics = createAsyncThunk<
   { address: string; apiType?: RiskApiType },
   { rejectValue: string }
 >(
-  'risk/fetchRiskMetrics',
-  async ({ address, apiType = 'v2' }, { rejectWithValue }) => {
-    try {
-      const data = await fetchRisk(address, apiType);
-      return data;
-    } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.detail) {
-        return rejectWithValue(error.response.data.detail as string);
-      }
-      if (error.message) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('Failed to fetch risk metrics');
+    'risk/fetchRiskMetrics',
+    async ({ address, apiType = 'v2' }, { rejectWithValue }) => {
+        try {
+            const data = await fetchRisk(address, apiType);
+            return data;
+        } catch (error: any) {
+            if (error.response && error.response.data && error.response.data.detail) {
+                return rejectWithValue(error.response.data.detail as string);
+            }
+            if (error.message) {
+                return rejectWithValue(error.message);
+            }
+            return rejectWithValue('Failed to fetch risk metrics');
+        }
     }
-  }
 );

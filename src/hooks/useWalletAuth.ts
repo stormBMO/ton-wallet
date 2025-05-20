@@ -15,6 +15,21 @@ export const useWalletAuth = () => {
     return dispatch(loginWithWallet(payload)).unwrap(); // теперь возвращает { jwt, address }
   }, [dispatch]);
 
+  const handleTonConnectLogin = useCallback(async (wallet: any) => {
+    // 3. Получить proof из wallet.connectItems.tonProof.proof
+    const proof = wallet?.connectItems?.tonProof?.proof;
+    if (!proof) {
+        throw new Error('TON Proof не получен от кошелька. Попробуйте переподключить кошелек.');
+    }
+    // 4. Отправить proof на бэкенд
+    return dispatch(loginWithWallet({
+        address: wallet.account.address,
+        publicKey: wallet.account.publicKey || '',
+        nonce: proof.payload, // nonce, который был передан в setConnectRequestParameters
+        signature: proof.signature // base64
+    })).unwrap();
+}, [dispatch]);
+
   const handleLogout = useCallback(async () => {
     dispatch(clearToken());
     
@@ -37,5 +52,6 @@ export const useWalletAuth = () => {
     authError: error,
     login: handleLogin,
     logout: handleLogout,
+    tonConnectLogin: handleTonConnectLogin,
   };
 }; 

@@ -19,20 +19,20 @@ interface UseReceiveModalReturn {
 }
 
 export const useReceiveModal = (): UseReceiveModalReturn => {
-  const [modalData, setModalData] = useState<ReceiveModalData | null>(null);
+    const [modalData, setModalData] = useState<ReceiveModalData | null>(null);
 
-  const openReceiveModal = (token: Token, userAddress: string) => {
-    setModalData({ token, userAddress });
-  };
+    const openReceiveModal = (token: Token, userAddress: string) => {
+        setModalData({ token, userAddress });
+    };
 
-  const closeReceiveModal = () => {
-    setModalData(null);
-  };
+    const closeReceiveModal = () => {
+        setModalData(null);
+    };
 
-  return {
-    openReceiveModal,
-    closeReceiveModal,
-    isReceiveModalOpen: modalData !== null,
-    receiveModalData: modalData,
-  };
+    return {
+        openReceiveModal,
+        closeReceiveModal,
+        isReceiveModalOpen: modalData !== null,
+        receiveModalData: modalData,
+    };
 }; 

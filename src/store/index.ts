@@ -9,32 +9,32 @@ import { riskReducer } from './slices/risk/riskSlice';
 import notificationsReducer from './slices/notifications/notificationsSlice';
 
 const walletPersistConfig = {
-  key: 'wallet',
-  storage,
-  whitelist: ['address', 'network', 'status']
+    key: 'wallet',
+    storage,
+    whitelist: ['address', 'network', 'status']
 };
 
 const uiPersistConfig = {
-  key: 'ui',
-  storage,
-  whitelist: ['theme', 'language']
+    key: 'ui',
+    storage,
+    whitelist: ['theme', 'language']
 };
 
 export const store = configureStore({
-  reducer: {
-    wallet: persistReducer<WalletState>(walletPersistConfig, walletReducer),
-    ui: persistReducer<UiState>(uiPersistConfig, uiReducer),
-    swap: swapReducer,
-    auth: authReducer,
-    risk: riskReducer,
-    notifications: notificationsReducer,
-  },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
-      },
-    }),
+    reducer: {
+        wallet: persistReducer<WalletState>(walletPersistConfig, walletReducer),
+        ui: persistReducer<UiState>(uiPersistConfig, uiReducer),
+        swap: swapReducer,
+        auth: authReducer,
+        risk: riskReducer,
+        notifications: notificationsReducer,
+    },
+    middleware: (getDefaultMiddleware) =>
+        getDefaultMiddleware({
+            serializableCheck: {
+                ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+            },
+        }),
 });
 
 export const persistor = persistStore(store);

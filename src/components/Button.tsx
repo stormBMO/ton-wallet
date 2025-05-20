@@ -12,16 +12,16 @@ const StyledButton = styled.button<ButtonProps>`
   border: none;
   cursor: pointer;
   background: ${({ variant }) =>
-    variant === 'primary' ? '#007bff' : '#f3f3f3'};
+        variant === 'primary' ? '#007bff' : '#f3f3f3'};
   color: ${({ variant }) =>
-    variant === 'primary' ? '#fff' : '#222'};
+        variant === 'primary' ? '#fff' : '#222'};
   transition: background 0.2s;
   &:hover {
     background: ${({ variant }) =>
-      variant === 'primary' ? '#0056b3' : '#e2e2e2'};
+        variant === 'primary' ? '#0056b3' : '#e2e2e2'};
   }
 `;
 
 export const Button: React.FC<ButtonProps> = ({ variant = 'primary', ...props }) => (
-  <StyledButton variant={variant} {...props} />
+    <StyledButton variant={variant} {...props} />
 ); 

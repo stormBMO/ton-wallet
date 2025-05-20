@@ -3,25 +3,25 @@ import { renderHook, act } from '@testing-library/react';
 import { useWalletStore } from '../store/slices/wallet';
 
 describe('useTonBalance', () => {
-  it('should fetch and update balance', async () => {
-    const mockAddress = 'EQD...';
-    const mockBalance = '100.5';
+    it('should fetch and update balance', async () => {
+        const mockAddress = 'EQD...';
+        const mockBalance = '100.5';
     
-    // Mock axios
-    vi.mock('axios', () => ({
-      default: {
-        get: vi.fn().mockResolvedValue({
-          data: { balance: mockBalance }
-        })
-      }
-    }));
+        // Mock axios
+        vi.mock('axios', () => ({
+            default: {
+                get: vi.fn().mockResolvedValue({
+                    data: { balance: mockBalance }
+                })
+            }
+        }));
 
-    const { result } = renderHook(() => useWalletStore());
+        const { result } = renderHook(() => useWalletStore());
 
-    await act(async () => {
-      await result.current.fetchBalances(mockAddress);
+        await act(async () => {
+            await result.current.fetchBalances(mockAddress);
+        });
+
+        expect(result.current.tonBalance).toBe(mockBalance);
     });
-
-    expect(result.current.tonBalance).toBe(mockBalance);
-  });
 });
