@@ -1,7 +1,5 @@
-// src/hooks/useDashboard.ts
 import { useEffect, useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useTonConnectUI } from '@tonconnect/ui-react';
 
@@ -12,6 +10,7 @@ import { useWalletAuth } from './useWalletAuth';
 import { useNotify } from '@/hooks/useNotify';
 import { loadWalletData } from '@/store/thunks/wallet';
 import { fetchTonRates } from '@/store/thunks/wallet';
+import { fetchRiskMetrics } from '@/store/thunks/risk';
 import { selectTokens, selectTotalTonValue } from '@/store/selectors/wallet';
 
 export const useDashboard = () => {
@@ -26,9 +25,8 @@ export const useDashboard = () => {
   const tokens = useSelector(selectTokens);
   const totalTonValue = useSelector(selectTotalTonValue);
 
-  const { byToken: riskByToken, status: riskStatusMap, error: riskErrorMap } =
+  const { byToken: riskByToken, status: riskStatusMap, error: riskErrorMap, apiType } =
     useSelector((s: RootState) => s.risk);
-
 
   useEffect(() => {
     if (authStatus !== AuthStatus.LOADING && !isAuthenticated) {
@@ -39,7 +37,6 @@ export const useDashboard = () => {
 
   useEffect(() => {
     if (!isAuthenticated || !walletAddress) return;
-  
     dispatch(loadWalletData({ address: walletAddress, network }))
       .unwrap()
       .catch(err => {
@@ -51,12 +48,21 @@ export const useDashboard = () => {
       });
   }, [isAuthenticated, walletAddress, network, dispatch, notify]);
 
-  // Загружаем курсы токенов, если они еще не загружены
   useEffect(() => {
     if (tokens.length && !tokens.every(t => t.priceTon)) {
       dispatch(fetchTonRates({ network }));
     }
   }, [tokens, network, dispatch]);
+
+  // Загружаем риск-метрики из второй ручки (risk_v2)
+  useEffect(() => {
+    if (!isAuthenticated || !walletAddress) return;
+    tokens.forEach(token => {
+      if (token.address) {
+        dispatch(fetchRiskMetrics({ address: token.address, apiType: 'v2' }));
+      }
+    });
+  }, [tokens, isAuthenticated, walletAddress, dispatch]);
 
   const displayTokens = useMemo(() => {
     return tokens.map(token => ({

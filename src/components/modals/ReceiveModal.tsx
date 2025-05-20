@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion'; // Предполагается, что fadeIn находится здесь
 import { XMarkIcon } from '@heroicons/react/24/outline'; // Пример иконки
 import { getTonLink } from '@/lib/deeplink'; // Добавлено
+import useNotify from '@/hooks/useNotify';
 
 // Предполагается, что тип Token определен где-то глобально или импортирован
 // Для примера, определим его здесь, если он еще не определен:
@@ -21,13 +22,14 @@ interface ReceiveModalProps {
 }
 
 export const ReceiveModal: FC<ReceiveModalProps> = ({ token, userAddress, onClose }) => {
+  const notify = useNotify();
   const deeplink = useMemo(() => {
     return getTonLink(userAddress, token); // Используем getTonLink
   }, [token, userAddress]);
 
   const handleCopy = () => {
     copy(deeplink);
-    alert('Ссылка скопирована!');
+    notify('success', 'Ссылка скопирована!');
   };
 
   return (

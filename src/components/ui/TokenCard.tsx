@@ -24,19 +24,19 @@ export const TokenCard: FC<TokenCardProps> = ({
   address,
   onClick
 }) => {
-  const riskValue = riskData?.sigma30d; // Пример получения значения для отображения, если нужно
+  const riskValue = riskData?.overall_risk_score; // Пример получения значения для отображения, если нужно
 
   const getRiskColor = () => {
     if (riskValue === undefined || riskValue === null) return "bg-gray-300";
-    if (riskValue < 0.3) return "bg-gradient-to-r from-green-400 to-green-500";
-    if (riskValue < 0.6) return "bg-gradient-to-r from-yellow-400 to-orange-400";
+    if (riskValue < 50) return "bg-gradient-to-r from-green-400 to-green-500";
+    if (riskValue < 70) return "bg-gradient-to-r from-yellow-400 to-orange-400";
     return "bg-gradient-to-r from-orange-500 to-red-500";
   };
 
   const getRiskLabel = () => {
     if (riskValue === undefined || riskValue === null) return "Нет данных";
-    if (riskValue < 0.3) return "Низкий риск";
-    if (riskValue < 0.6) return "Средний риск";
+    if (riskValue < 50) return "Низкий риск";
+    if (riskValue < 70) return "Средний риск";
     return "Высокий риск";
   };
 

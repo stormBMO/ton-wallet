@@ -1,20 +1,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { RiskMetrics } from "../slices/risk/types";
+import { RiskMetrics, RiskV2Metrics } from "../slices/risk/types";
 import { RootState } from "..";
-import apiClient from "@/api/axios";
+import { fetchRisk, RiskApiType } from "@/api/riskApi";
+
+export type RiskThunkResult = RiskMetrics | RiskV2Metrics;
 
 export const fetchRiskMetrics = createAsyncThunk<
-  RiskMetrics,
-  { address: string },
+  RiskThunkResult,
+  { address: string; apiType?: RiskApiType },
   { rejectValue: string }
 >(
   'risk/fetchRiskMetrics',
-  async ({ address }, { rejectWithValue }) => {
+  async ({ address, apiType = 'v2' }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post<RiskMetrics>('/api/risk/calculate', {        
-            token_address: address,
-      });
-      return response.data;
+      const data = await fetchRisk(address, apiType);
+      return data;
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.detail) {
         return rejectWithValue(error.response.data.detail as string);
