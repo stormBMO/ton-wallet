@@ -58,8 +58,7 @@ export const Dashboard = () => {
     };
 
     const handleWithdraw = () => {
-        notify('Функция вывода средств в разработке!');
-        console.log('Withdraw clicked');
+        notify('error', 'Функция вывода средств в разработке!');
     };
 
     const handleTokenCardClick = (address: string) => {
@@ -84,9 +83,8 @@ export const Dashboard = () => {
             >
                 <div className="flex flex-col items-center gap-2 mb-6">
                     <h1 className="text-4xl md:text-5xl font-semibold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            Дашборд
+                        Дашборд
                     </h1>
-                    <span className="text-base text-gray-600 dark:text-gray-400 font-medium">Ваши активы и риски в TON</span>
                 </div>
 
                 <BalanceCard

@@ -46,14 +46,15 @@ export const TokenCard: FC<TokenCardProps> = ({
 
     return (
         <motion.div 
-            layoutId={`token-card-${address || symbol}`} // Добавляем layoutId
-            variants={fadeIn} // Оставляем fadeIn или можно убрать, если layout анимация будет основной
+            layoutId={`token-card-${address || symbol}`}
+            variants={fadeIn}
             initial="hidden"
             animate="show"
-            className="glasscard p-5 flex flex-col gap-3 cursor-pointer" // Добавили cursor-pointer
-            onClick={() => onClick && address && onClick(address)} // Вызываем onClick
-            whileHover={{ y: -5 }} // Небольшой эффект при наведении для интерактивности
-            transition={{ type: "spring", stiffness: 300 }}
+            className="p-5 flex flex-col gap-3 cursor-pointer border border-gray-200 dark:border-[#2d375a] bg-white/80 dark:bg-[#232a4a]/80 shadow-lg hover:shadow-2xl transition-shadow duration-300"
+            style={{ backdropFilter: 'blur(10px)', borderRadius: '18px' }}
+            onClick={() => onClick && address && onClick(address)}
+            whileHover={{ y: -5 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10, mass: 0.5, restDelta: 0.01 }}
         >
             <div className="flex items-center gap-2">
                 {iconUrl ? (

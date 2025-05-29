@@ -329,7 +329,7 @@ const ConnectWalletModal: React.FC = () => {
                                     marginBottom: 12
                                 }}>
                                     {Array(24).fill('').map((_, index) => (
-                                        <MnemonicCell key={index} editable>
+                                        <MnemonicCell key={index} editable={true}>
                                             <span style={{ color: '#888', fontSize: 13, marginRight: 4 }}>{index + 1}.</span>
                                             <input
                                                 ref={el => inputRefs.current[index] = el}

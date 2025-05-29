@@ -24,7 +24,7 @@ export const TokenDetailModal: React.FC<TokenDetailModalProps> = ({ token, onClo
 
     return (
         <motion.div
-            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 bg-black rounded-xl bg-opacity-75 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
             onClick={onClose} // Закрытие по клику на фон
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -33,6 +33,7 @@ export const TokenDetailModal: React.FC<TokenDetailModalProps> = ({ token, onClo
             <motion.div
                 layoutId={`token-card-${token.address || token.symbol}`} // Тот же layoutId, что и у TokenCard
                 className="glasscard p-6 rounded-xl shadow-2xl w-full max-w-lg flex flex-col gap-4 relative overflow-hidden"
+                style={{ backdropFilter: 'blur(10px)', borderRadius: '18px' }}
                 onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие по клику на само модальное окно
             >
                 <button 
@@ -67,16 +68,7 @@ export const TokenDetailModal: React.FC<TokenDetailModalProps> = ({ token, onClo
                         <p className="text-gray-500">Данные о риске отсутствуют.</p>
                     )}
           
-                    {/* Сюда можно добавить более структурированное отображение данных о риске */}
-                    {/* Например, отдельные компоненты для каждого показателя риска */}
                 </div>
-
-                <button 
-                    onClick={onClose} 
-                    className="btn-secondary mt-4 py-2.5 text-sm"
-                >
-          Закрыть
-                </button>
             </motion.div>
         </motion.div>
     );

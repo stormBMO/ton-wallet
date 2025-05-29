@@ -1,65 +1,29 @@
-import { useTonConnectUI } from '@tonconnect/ui-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store';
-import { setCreateWalletModalOpen, setConnectWalletModalOpen } from '../store/slices/ui/uiSlice';
-import { resetWallet, setNetwork, setAddress, setMnemonic, setStatus } from '../store/slices/wallet/walletSlice';
-import { mnemonicToWalletKey } from '@ton/crypto';
-import { WalletContractV4 } from '@ton/ton';
-import { useState, useEffect, useCallback } from 'react';
-import { AuroraText } from './magicui/aurora-text';
+import { setNetwork } from '../store/slices/wallet/walletSlice';
+import { useState, useCallback } from 'react';
 import { useWalletAuth } from '../hooks/useWalletAuth';
-import { useNavigate, Link } from 'react-router-dom';
-import { useNotify } from '@/hooks/useNotify';
+import { Link } from 'react-router-dom';
+import useNotify from '@/hooks/useNotify';
 
 const Header = () => {
-    const [tonConnectUI] = useTonConnectUI();
     const dispatch = useDispatch();
     const wallet = useSelector((state: RootState) => state.wallet);
-    const [showImport, setShowImport] = useState(false);
-    const [importMnemonic, setImportMnemonic] = useState('');
-    const [isConnecting, setIsConnecting] = useState(false);
-    const [importError, setImportError] = useState<string | null>(null);
-    const { isAuthenticated, address, login, logout } = useWalletAuth();
-    const notify = useNotify();
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        if (tonConnectUI.account?.address) {
-            dispatch(setAddress(tonConnectUI.account.address));
-        }
-    }, [tonConnectUI.account?.address, dispatch]);
-
-
-    const handleDisconnect = async () => {
-        try {
-            dispatch(resetWallet());
-            if (tonConnectUI.account) {
-                await tonConnectUI.disconnect();
-            }
-        } catch (error) {
-            console.error('Failed to disconnect wallet:', error);
-        }
-    };
+    const { isAuthenticated, address, logout } = useWalletAuth();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const notify  = useNotify();
 
     const handleNetworkChange = async () => {
         const newNetwork = wallet.network === 'testnet' ? 'mainnet' : 'testnet';
         dispatch(setNetwork(newNetwork));
-        if (wallet.address) {
-            await handleLogout();
-        }
     };
 
     const handleCopyAddress = useCallback(() => {
         if (address) {
             navigator.clipboard.writeText(address);
-            notify('success', 'Адрес скопирован в буфер');
         }
-    }, [address]);
-
-
-    const handleOpenConnectModal = () => {
-        dispatch(setConnectWalletModalOpen(true));
-    };
+        notify('success', 'Адрес успешно скопирован');
+    }, [address, notify]);
 
     const handleLogout = async () => {
         await logout();
@@ -69,13 +33,18 @@ const Header = () => {
         <header className="sticky top-0 w-full bg-white/70 dark:bg-[#14172b]/70 backdrop-blur supports-backdrop-blur:bg-white/70 border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between z-20 relative">
             <div className="flex items-center gap-6">
                 <div className="text-2xl font-extrabold tracking-tight select-none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Wallet</div>
-                <nav className="flex gap-4 ml-4">
+                {/* Десктопное меню */}
+                <nav className="hidden md:flex gap-6 items-center">
                     <Link to="/" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Дашборд</Link>
                     <Link to="/swap" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Своп</Link>
                     <Link to="/settings" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Настройки</Link>
                     <span className={`px-2 py-0.5 rounded text-xs font-semibold ml-2 ${wallet.network === 'testnet' ? 'bg-yellow-400 text-white' : 'bg-green-500 text-white'}`}>{wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}</span>
                     <button onClick={handleNetworkChange} className="ml-2 text-xs px-2 py-0.5 rounded-xl bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 font-medium transition">Сменить сеть</button>
                 </nav>
+                {/* Кнопка-гамбургер для мобилы */}
+                <button className="md:hidden" onClick={() => setMenuOpen(true)}>
+                    <svg width="28" height="28" fill="none"><path d="M4 7h20M4 14h20M4 21h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+                </button>
             </div>
             <div className="flex items-center gap-4">
                 {isAuthenticated ? (
@@ -83,12 +52,25 @@ const Header = () => {
                         <span className="text-sm text-gray-600 dark:text-gray-400 font-mono backdrop-blur-lg bg-white/10 dark:bg-white/5 px-3 py-1 rounded-lg shadow-sm" onClick={handleCopyAddress}>
                             {address ? `${address.slice(0, 4)}…${address.slice(-4)}` : ''}
                         </span>
-                        <button onClick={handleLogout} className="px-4 py-1.5 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold transition">Выйти</button>
+                        <button onClick={handleLogout} className="px-4 py-1.5 rounded-full bg-ton-blue hover:bg-ton-blue/90 text-white font-semibold transition">Выйти</button>
                     </>
                 ) : (
-                    <button onClick={handleOpenConnectModal} className="px-4 py-1.5 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold transition">Войти</button>
+                    <button onClick={handleLogout} className="px-4 py-1.5 rounded-full bg-ton-blue hover:bg-ton-blue/90 text-white font-semibold transition">Войти</button>
                 )}
             </div>
+            {/* Мобильное меню */}
+            {menuOpen && (
+                <div className="fixed inset-0 z-50 bg-black/40 flex justify-end">
+                    <div className="w-64 bg-white h-full shadow-lg p-6 flex flex-col gap-4 animate-slide-in-right">
+                        <button onClick={() => setMenuOpen(false)} className="self-end text-2xl">&times;</button>
+                        <Link to="/" onClick={() => setMenuOpen(false)} className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Дашборд</Link>
+                        <Link to="/swap" onClick={() => setMenuOpen(false)} className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Своп</Link>
+                        <Link to="/settings" onClick={() => setMenuOpen(false)} className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Настройки</Link>
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ml-2 ${wallet.network === 'testnet' ? 'bg-yellow-400 text-white' : 'bg-green-500 text-white'}`}>{wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}</span>
+                        <button onClick={handleNetworkChange} className="ml-2 text-xs px-2 py-0.5 rounded-xl bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 font-medium transition">Сменить сеть</button>
+                    </div>
+                </div>
+            )}
         </header>
     );
 };
