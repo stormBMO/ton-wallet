@@ -54,7 +54,18 @@ export const useSwap = () => {
                 if (quote?.error || quote?.rate === '—' || quote?.expectedAmount === '0') {
                     setRate('—');
                     setMinReceive('—');
-                    setRateError(quote?.error || 'Нет котировки для выбранной пары');
+                    let errorMsg = quote?.error || 'Нет котировки для выбранной пары';
+                    
+                    // Улучшенные сообщения об ошибках
+                    if (errorMsg.includes('Asset not found')) {
+                        errorMsg = `Токены ${swap.fromToken} или ${swap.toToken} не поддерживаются MyTonSwap в testnet. Попробуйте виджет или другие токены.`;
+                    } else if (errorMsg.includes('No route found')) {
+                        errorMsg = 'Нет маршрута для обмена этих токенов. Попробуйте другую пару или виджет MyTonSwap.';
+                    } else if (errorMsg.includes('No liquidity')) {
+                        errorMsg = 'Недостаточная ликвидность для обмена. Попробуйте меньшую сумму или виджет MyTonSwap.';
+                    }
+                    
+                    setRateError(errorMsg);
                     return;
                 }
                 setRate(`${(parseFloat(quote.expectedAmount) / parseFloat(swap.amount)).toFixed(4)} ${swap.toToken} за 1 ${swap.fromToken}`);
@@ -63,12 +74,12 @@ export const useSwap = () => {
             } else {
                 setRate('—');
                 setMinReceive('—');
-                setRateError(resultAction.payload as string || 'Пара недоступна или нет ликвидности');
+                setRateError(resultAction.payload as string || 'Пара недоступна или нет ликвидности. Попробуйте виджет MyTonSwap.');
             }
         } catch (error: any) {
             setRate('—');
             setMinReceive('—');
-            setRateError(error.message || 'Ошибка получения котировки');
+            setRateError('Ошибка получения котировки. Попробуйте виджет MyTonSwap.');
         } finally {
             setIsLoading(false);
         }
@@ -109,7 +120,7 @@ export const useSwap = () => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
             fetchQuote();
-        }, 4000);
+        }, 1000);
         return () => {
             if (debounceRef.current) clearTimeout(debounceRef.current);
         };

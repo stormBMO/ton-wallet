@@ -17,12 +17,6 @@ apiClient.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             localStorage.removeItem('jwt');
-            // Предполагается, что у вас есть доступ к history или другому способу навигации
-            // window.location.href = '/connect-wallet';
-            // Для React Router можно использовать useNavigate хук, но это нужно делать в компоненте
-            // или передавать history сюда.
-            // Пока что просто очистим токен.
-            console.error('Unauthorized, redirecting to /connect-wallet');
         }
         return Promise.reject(error);
     }

@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSwap } from '../hooks/useSwap';
 import { motion } from 'framer-motion';
 import { fadeIn, tap } from '@/lib/motion';
+import { useTonConnectUI } from '@tonconnect/ui-react';
+import { createSwap } from '@mytonswap/widget';
 
 interface ConfirmSwapModalProps {
     open: boolean;
@@ -67,6 +69,40 @@ const SimpleModal = ({ open, onClose, title, message }: { open: boolean, onClose
     );
 };
 
+// Компонент MyTonSwap Widget (официальный)
+const MyTonSwapWidget = () => {
+    const [tonConnectUI] = useTonConnectUI();
+    const initMount = useRef(false);
+
+    useEffect(() => {
+        if (tonConnectUI && !initMount.current) {
+            initMount.current = true;
+            try {
+                createSwap("mytonswap-widget", {
+                    tonConnectInstance: tonConnectUI,
+                    options: {
+                        ui_preferences: {
+                            primary_color: "#3b82f6",
+                            dark_color: "#0f172a",
+                        },
+                    },
+                });
+            } catch (error) {
+                console.error('Error creating MyTonSwap widget:', error);
+            }
+        }
+    }, [tonConnectUI]);
+
+    return (
+        <div className="glasscard p-6">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white text-center">
+                MyTonSwap Widget (официальный)
+            </h2>
+            <div id="mytonswap-widget" style={{ minHeight: '500px' }}></div>
+        </div>
+    );
+};
+
 export const SwapPage = () => {
     const {
         fromToken, toToken, amount, rate, minReceive, fee, userTokens, rateError,
@@ -75,11 +111,17 @@ export const SwapPage = () => {
         performSwap
     } = useSwap();
 
+    // Переключатель между реализациями
+    const [useWidget, setUseWidget] = React.useState(false);
+
     // Для отладки symbol TON
     useEffect(() => {
         if (userTokens.length > 0) {
             // eslint-disable-next-line no-console
-            console.log('userTokens:', userTokens);
+            console.log('Доступные токены пользователя:');
+            userTokens.forEach(token => {
+                console.log(`- ${token.symbol} (${token.name}): ${token.address}, баланс: ${token.balance}`);
+            });
         }
     }, [userTokens]);
 
@@ -89,10 +131,12 @@ export const SwapPage = () => {
             // Найти TON (Toncoin) и USDT (или любой jetton)
             const tonToken = userTokens.find(t => t.symbol.toUpperCase().includes('TON'));
             const usdtToken = userTokens.find(t => t.symbol.toUpperCase().includes('USDT'));
+            
             // Если fromToken не валиден — выставить TON или первый токен
             if (!userTokens.some(t => t.symbol === fromToken)) {
                 setFromToken(tonToken?.symbol || userTokens[0].symbol);
             }
+            
             // Если toToken совпадает с fromToken или не валиден — выбрать USDT или другой jetton
             if (fromToken === toToken || !userTokens.some(t => t.symbol === toToken)) {
                 let alt = userTokens.find(t => t.symbol !== fromToken && t.symbol !== tonToken?.symbol);
@@ -112,6 +156,12 @@ export const SwapPage = () => {
         performSwap();
     };
 
+    // Функция для получения названия токена по символу (для совместимости)
+    const getTokenName = (symbol: string) => {
+        const token = userTokens.find(t => t.symbol === symbol);
+        return token ? token.symbol : symbol;
+    };
+
     // Если нет токенов или не загружены — показываем заглушку
     if (!userTokens || userTokens.length === 0) {
         return (
@@ -123,75 +173,99 @@ export const SwapPage = () => {
 
     return (
         <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex flex-col justify-center">
-            {/* <MyTonSwapWidget /> */}
             <motion.div
                 variants={fadeIn}
                 initial="hidden"
                 animate="show"
             >
                 <h1 className="text-2xl font-semibold text-center mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Своп токенов</h1>
-                <motion.form 
-                    onSubmit={handleSwap} 
-                    className="glasscard p-6 flex flex-col gap-4"
-                >
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Из</label>
-                        <select 
-                            value={fromToken} 
-                            onChange={e => setFromToken(e.target.value)} 
-                            className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
-                            disabled={isLoading}
+                
+                {/* Переключатель между реализациями */}
+                <div className="glasscard p-4 mb-4">
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                            {useWidget ? 'MyTonSwap Widget' : 'Собственная реализация'}
+                        </span>
+                        <button
+                            onClick={() => setUseWidget(!useWidget)}
+                            className="px-3 py-1 rounded-lg bg-primary text-white text-sm"
                         >
-                            {/* Показываем все токены, кроме выбранного во втором поле */}
-                            {userTokens.filter(t => t.symbol !== toToken).map(t => (
-                                <option key={t.symbol} value={t.symbol}>
-                                    {t.name} {t.balance ? `(${t.balance})` : ''}
-                                </option>
-                            ))}
-                        </select>
+                            {useWidget ? 'Переключить на собственную' : 'Использовать виджет'}
+                        </button>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">В</label>
-                        <select 
-                            value={toToken} 
-                            onChange={e => setToToken(e.target.value)} 
-                            className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
-                            disabled={isLoading}
-                        >
-                            {/* Показываем все токены, кроме выбранного в первом поле */}
-                            {userTokens.filter(t => t.symbol !== fromToken).map(t => (
-                                <option key={t.symbol} value={t.symbol}>{t.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Сумма</label>
-                        <input 
-                            type="number" 
-                            value={amount} 
-                            onChange={e => setAmount(e.target.value)} 
-                            min="0" 
-                            step="0.01" 
-                            placeholder="0.00" 
-                            required={true} 
-                            className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
-                            disabled={isLoading}
-                        />
-                    </div>
-                    <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300 glasscard p-3">
-                        <div>Курс: <b>{rate}</b></div>
-                        <div>Мин. к получению: <b>{minReceive} {toToken}</b></div>
-                        {rateError && <div className="text-red-500 mt-1">{rateError}</div>}
-                    </div>
-                    <motion.button 
-                        type="submit" 
-                        className="w-full py-3 px-4 rounded-xl bg-secondary text-white font-semibold focus:outline-none focus:ring-2 focus:ring-secondary transition"
-                        disabled={isLoading || !!rateError}
-                        whileTap={tap}
+                    {rateError && (
+                        <div className="mt-2 text-xs text-red-500">
+                            Ошибка: {rateError}. Попробуйте виджет MyTonSwap.
+                        </div>
+                    )}
+                </div>
+
+                {useWidget ? (
+                    <MyTonSwapWidget />
+                ) : (
+                    <motion.form 
+                        onSubmit={handleSwap} 
+                        className="glasscard p-6 flex flex-col gap-4"
                     >
-                        {isLoading ? 'Загрузка...' : 'Своп'}
-                    </motion.button>
-                </motion.form>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Из</label>
+                            <select 
+                                value={fromToken} 
+                                onChange={e => setFromToken(e.target.value)} 
+                                className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
+                                disabled={isLoading}
+                            >
+                                {/* Показываем все токены, кроме выбранного во втором поле */}
+                                {userTokens.filter(t => t.symbol !== toToken).map(t => (
+                                    <option key={t.symbol} value={t.symbol}>
+                                        {t.name} {t.balance ? `(${parseFloat(t.balance).toFixed(4)})` : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">В</label>
+                            <select 
+                                value={toToken} 
+                                onChange={e => setToToken(e.target.value)} 
+                                className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
+                                disabled={isLoading}
+                            >
+                                {/* Показываем все токены, кроме выбранного в первом поле */}
+                                {userTokens.filter(t => t.symbol !== fromToken).map(t => (
+                                    <option key={t.symbol} value={t.symbol}>{t.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Сумма</label>
+                            <input 
+                                type="number" 
+                                value={amount} 
+                                onChange={e => setAmount(e.target.value)} 
+                                min="0" 
+                                step="0.01" 
+                                placeholder="0.00" 
+                                required={true} 
+                                className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
+                                disabled={isLoading}
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300 glasscard p-3">
+                            <div>Курс: <b>{rate}</b></div>
+                            <div>Мин. к получению: <b>{minReceive} {getTokenName(toToken)}</b></div>
+                            {rateError && <div className="text-red-500 mt-1">{rateError}</div>}
+                        </div>
+                        <motion.button 
+                            type="submit" 
+                            className="w-full py-3 px-4 rounded-xl bg-secondary text-white font-semibold focus:outline-none focus:ring-2 focus:ring-secondary transition"
+                            disabled={isLoading || !!rateError}
+                            whileTap={tap}
+                        >
+                            {isLoading ? 'Загрузка...' : 'Своп'}
+                        </motion.button>
+                    </motion.form>
+                )}
             </motion.div>
             <ConfirmSwapModal open={showModal} onClose={() => setShowModal(false)} amount={amount} rate={rate} fee={fee} onConfirm={handleConfirm} />
             <SimpleModal open={showError} onClose={() => setShowError(false)} title="Ошибка" message={errorMsg} />

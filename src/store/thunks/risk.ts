@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RiskMetrics, RiskV2Metrics } from "../slices/risk/types";
-import { RootState } from "..";
 import { fetchRisk, RiskApiType } from "@/api/riskApi";
 
 export type RiskThunkResult = RiskMetrics | RiskV2Metrics;
@@ -15,12 +14,16 @@ export const fetchRiskMetrics = createAsyncThunk<
         try {
             const data = await fetchRisk(address, apiType);
             return data;
-        } catch (error: any) {
-            if (error.response && error.response.data && error.response.data.detail) {
-                return rejectWithValue(error.response.data.detail as string);
+        } catch (error: unknown) {
+            if (error && typeof error === 'object' && 'response' in error) {
+                const httpError = error as { response?: { data?: { detail?: string } } };
+                if (httpError?.response?.data?.detail) {
+                    return rejectWithValue(httpError.response.data.detail);
+                }
             }
-            if (error.message) {
-                return rejectWithValue(error.message);
+            if (error && typeof error === 'object' && 'message' in error) {
+                const messageError = error as { message: string };
+                return rejectWithValue(messageError.message);
             }
             return rejectWithValue('Failed to fetch risk metrics');
         }

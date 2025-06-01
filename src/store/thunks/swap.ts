@@ -4,6 +4,13 @@ import { RootState } from "../index";
 import { fetchQuoteFromAPI, fetchUserTokensFromAPI, sendSwapTransaction, convertAmount } from "@/api/swapApi";
 import { TonConnectUI } from '@tonconnect/ui-react';
 
+// Функция для преобразования символа токена в адрес
+const getTokenAddress = (symbol: string, userTokens: any[]): string => {
+    if (symbol === 'TON') return 'TON'; // MyTonSwap понимает 'TON' для нативного токена
+    const token = userTokens.find((t: any) => t.symbol === symbol);
+    return token ? token.address : symbol;
+};
+
 // Базовые функции
 export const getQuote = createAsyncThunk(
     'swap/getQuote',
@@ -19,18 +26,20 @@ export const getQuote = createAsyncThunk(
         try {
             const state = getState() as RootState;
             const userAddress = state.wallet.address;
-            const network = state.wallet.network;
+            const userTokens = state.wallet.tokens || [];
 
             if (!userAddress) {
                 return rejectWithValue('Кошелек не подключен');
             }
 
+            // Преобразуем символы в адреса для API
+            const fromTokenAddress = getTokenAddress(fromToken, userTokens);
+            const toTokenAddress = getTokenAddress(toToken, userTokens);
+
             const quote = await fetchQuoteFromAPI({ 
-                fromToken, 
-                toToken, 
-                amount, 
-                userAddress, 
-                network 
+                fromToken: fromTokenAddress, 
+                toToken: toTokenAddress, 
+                amount
             });
 
             return {
@@ -40,17 +49,18 @@ export const getQuote = createAsyncThunk(
                 amount,
                 amountFormatted: amount
             };
-        } catch (error: any) {
-            return rejectWithValue(error.message || 'Ошибка получения котировки');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка получения котировки';
+            return rejectWithValue(errorMessage);
         }
     }
 );
 
-export const calcFee = async ({ fromToken, toToken, amount, network = 'mainnet' }: { 
+export const calcFee = async ({ fromToken, toToken, amount, _network = 'mainnet' }: { 
   fromToken: string; 
   toToken: string; 
   amount: string; 
-  network?: 'testnet' | 'mainnet' 
+  _network?: 'testnet' | 'mainnet' 
 }) => {
     const baseGasAmount = '0.05'; // Базовая комиссия TON в газе
     const swapGasAmount = '0.1'; // Комиссия для свопа
@@ -82,11 +92,10 @@ export const checkBalance = createAsyncThunk(
   }, { getState, rejectWithValue }) => {
         try {
             const state = getState() as RootState;
-            const network = state.wallet.network;
-            const userTokens: any[] = (state.wallet.tokens || []) as any[];
+            const userTokens = (state.wallet.tokens || []);
       
             // Находим токен в списке токенов пользователя
-            const userToken = userTokens.find((t: any) => t.symbol === token);
+            const userToken = userTokens.find((t) => t.address === token);
       
             if (!userToken) {
                 return rejectWithValue(`Токен ${token} не найден в кошельке`);
@@ -103,8 +112,9 @@ export const checkBalance = createAsyncThunk(
                 balance: userToken.balance,
                 balanceFormatted: convertAmount.fromNano(userToken.balance)
             };
-        } catch (error: any) {
-            return rejectWithValue(error.message || 'Не удалось проверить баланс');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось проверить баланс';
+            return rejectWithValue(errorMessage);
         }
     }
 );
@@ -128,8 +138,9 @@ export const getUserTokens = createAsyncThunk(
                 ...token,
                 balanceFormatted: convertAmount.fromNano(token.balance)
             }));
-        } catch (error: any) {
-            return rejectWithValue(error.message || 'Не удалось получить список токенов пользователя');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Не удалось получить список токенов пользователя';
+            return rejectWithValue(errorMessage);
         }
     }
 );
@@ -142,8 +153,9 @@ export const fetchQuote = createAsyncThunk<
 >('swap/fetchQuote', async (params, { rejectWithValue }) => {
     try {
         return await getQuote(params);
-    } catch (e: any) {
-        return rejectWithValue(e.message || 'Ошибка получения котировки');
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Ошибка получения котировки';
+        return rejectWithValue(errorMessage);
     }
 });
 
@@ -153,7 +165,7 @@ function isCheckBalancePayload(payload: unknown): payload is { hasEnoughBalance:
 }
 
 function getOriginalContract<T>(opened: any): T {
-  return opened.contract || opened._contract || opened;
+    return opened.contract || opened._contract || opened;
 }
 
 export const swapThunk = createAsyncThunk(
@@ -189,12 +201,19 @@ export const swapThunk = createAsyncThunk(
                 return rejectWithValue('Не удалось проверить баланс');
             }
             // Получаем маршрут и payload через MyTonSwap SDK
+            const userTokens = state.wallet.tokens || [];
+            const fromTokenAddress = getTokenAddress(fromToken, userTokens);
+            const toTokenAddress = getTokenAddress(toToken, userTokens);
+            
             const quote = await fetchQuoteFromAPI({
-                fromToken,
-                toToken,
-                amount,
-                userAddress
+                fromToken: fromTokenAddress,
+                toToken: toTokenAddress,
+                amount
             });
+
+            if (quote.error || !quote.bestRoute) {
+                return rejectWithValue(quote.error || 'Не удалось получить маршрут для свопа');
+            }
             let result;
             if (walletType === 'tonconnect') {
                 if (!tonConnectUI) {
@@ -215,8 +234,9 @@ export const swapThunk = createAsyncThunk(
                 minAmountOut: quote.minAmountOut,
                 userAddress
             };
-        } catch (error: any) {
-            return rejectWithValue(error.message || 'Ошибка свопа');
+        } catch (error: unknown) {
+            const errorMessage = error instanceof Error ? error.message : 'Ошибка свопа';
+            return rejectWithValue(errorMessage);
         }
     }
 ); 

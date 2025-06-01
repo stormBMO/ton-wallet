@@ -23,7 +23,7 @@ interface SwapState {
 
 const initialState: SwapState = {
     fromToken: 'TON',
-    toToken: 'jUSDT',
+    toToken: '',
     amount: '',
     rate: '',
     minReceive: '',
