@@ -25,9 +25,9 @@ function convertHexToBase64Address(hexAddress: string): string {
 
 // Проверка валидности адреса
 function isValidTokenAddress(address: string): boolean {
-    // Нулевой адрес TON
+    // Для нативного TON (нулевой адрес) разрешаем обработку
     if (address === "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c") {
-        return false;
+        return true;  // Теперь разрешаем нативный TON
     }
     
     // UUID токены
