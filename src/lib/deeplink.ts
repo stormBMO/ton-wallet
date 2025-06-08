@@ -1,6 +1,33 @@
+import { Address } from '@ton/core';
+
 export interface TokenForLink {
   symbol: string;
   address?: string; // Адрес контракта токена, если это не TON (jetton master address)
+}
+
+/**
+ * Правильно конвертирует адрес в testnet non-bounceable формат.
+ * Использует @ton/core для корректной конвертации с правильным checksum.
+ */
+function normalizeForTestnet(addressString: string): string {
+    try {
+        // Парсим адрес с помощью @ton/core
+        const address = Address.parse(addressString);
+        
+        // Конвертируем в testnet non-bounceable формат
+        const testnetAddress = address.toString({
+            urlSafe: true,
+            bounceable: false,
+            testOnly: true
+        });
+        
+        console.log('🔄 Converted to testnet non-bounceable:', testnetAddress);
+        return testnetAddress;
+    } catch (error) {
+        console.error('❌ Failed to parse address:', error);
+        console.log('📍 Using original address:', addressString);
+        return addressString;
+    }
 }
 
 /**
@@ -17,17 +44,28 @@ export const getTonLink = (userWalletAddress: string, token?: TokenForLink): str
         return ''; // Или какая-то заглушка
     }
 
+    // Правильно конвертируем адрес для testnet
+    const normalizedAddress = normalizeForTestnet(userWalletAddress);
+    
+    console.log('🔗 Original address:', userWalletAddress);
+    console.log('📍 Normalized for testnet:', normalizedAddress);
+    console.log('🪙 Token info:', token);
+
     if (!token || token.symbol === 'TON') {
-        return `ton://transfer/${userWalletAddress}`;
+        const deeplink = `ton://transfer/${normalizedAddress}`;
+        console.log('✅ Generated TON deeplink:', deeplink);
+        return deeplink;
     }
   
-    // Для jetton-ов. По условию amount=0 и адрес токена передается в bin.
-    // bin - это base64url encoded строка (обычно это cell), но для простоты тут может быть просто адрес контракта.
-    // Однако, стандартные кошельки ожидают cell в base64url. Для простого текстового комментария (как адрес контракта)
-    // его нужно было бы предварительно закодировать в BOC (Bag of Cells) и затем в base64url.
-    // Здесь мы используем упрощенный вариант, где в bin передается просто адрес.
-    // Некоторые кошельки могут неверно интерпретировать это, если ожидают BOC.
-    // Для более строгого соответствия, нужно будет создать cell с комментарием (адресом токена)
-    // и сериализовать его. Для данной задачи, я следую описанию: &bin=${token.address}
-    return `ton://transfer/${userWalletAddress}?amount=0&bin=${token.address || ''}`;
+    // Для jetton transfers
+    if (token.address) {
+        const deeplink = `ton://transfer/${normalizedAddress}?jetton=${token.address}`;
+        console.log('✅ Generated Jetton deeplink:', deeplink);
+        return deeplink;
+    }
+    
+    // Fallback
+    const deeplink = `ton://transfer/${normalizedAddress}`;
+    console.log('⚠️ Fallback TON deeplink:', deeplink);
+    return deeplink;
 }; 
