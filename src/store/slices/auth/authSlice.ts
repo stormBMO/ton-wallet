@@ -25,6 +25,8 @@ export const loginWithWallet = createAsyncThunk(
         privateKey?: Buffer;
         signature?: string;
         nonce?: string;
+        timestamp?: number;
+        domain?: string;
     }, { rejectWithValue }) => {
         try {
             let signatureBase64: string;
@@ -48,12 +50,16 @@ export const loginWithWallet = createAsyncThunk(
                 ? '/api/auth/verify_ton_connect'  // TON Connect
                 : '/api/auth/verify_signature';   // Старый способ (seed)
 
-            const verifyResponse = await apiClient.post(endpoint, {
+            const requestData = {
                 address: payload.address,
                 public_key: payload.publicKey,
                 nonce,
                 signature: signatureBase64,
-            });
+                ...(payload.timestamp && { timestamp: payload.timestamp }),
+                ...(payload.domain && { domain: payload.domain })
+            };
+
+            const verifyResponse = await apiClient.post(endpoint, requestData);
 
             const { access_token } = verifyResponse.data;
             localStorage.setItem('jwt', access_token);

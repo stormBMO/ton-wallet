@@ -7,7 +7,7 @@ import { Dashboard } from './pages/DashboardPage';
 import ConnectWalletModal from './components/modals/ConnectWalletModal';
 import { SettingsPage } from './pages/SettingsPage';
 import TonConnectGate from './components/TonConnectGate';
-import { TonConnectDebug } from './components/TonConnectDebug';
+
 
 function App() {
     return (
@@ -16,7 +16,6 @@ function App() {
                 <div className='min-h-screen'>
                     <Header />
                     <TonConnectGate />
-                    <TonConnectDebug />
                     <Routes>
                         <Route path='/' element={<Dashboard />} />
                         <Route path='/swap' element={<SwapPage />} />

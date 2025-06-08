@@ -62,7 +62,7 @@ export const fetchQuoteFromAPI = async ({
   amount: string;
 }) => {
     try {
-        console.log('Fetching quote for:', { fromToken, toToken, amount });
+    
         
         // Для TON используем стандартный способ поиска
         let fromAssetId = fromToken;
@@ -77,7 +77,7 @@ export const fetchQuoteFromAPI = async ({
             toAssetId = 'TON';
         }
 
-        console.log('Looking for assets:', { fromAssetId, toAssetId });
+
 
         const assetIn = await mytonswap.assets.getExactAsset(fromAssetId);
         const assetOut = await mytonswap.assets.getExactAsset(toAssetId);
@@ -97,7 +97,7 @@ export const fetchQuoteFromAPI = async ({
             };
         }
 
-        console.log('Finding best route...');
+
         
         const bestRoute = await mytonswap.router.findBestRoute(
             assetIn.address,
@@ -106,7 +106,7 @@ export const fetchQuoteFromAPI = async ({
             0.5
         );
 
-        console.log('Best route result:', bestRoute);
+
 
         if (!bestRoute || !bestRoute.pool_data) {
             return {

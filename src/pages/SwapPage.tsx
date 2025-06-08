@@ -114,16 +114,7 @@ export const SwapPage = () => {
     // Переключатель между реализациями
     const [useWidget, setUseWidget] = React.useState(false);
 
-    // Для отладки symbol TON
-    useEffect(() => {
-        if (userTokens.length > 0) {
-            // eslint-disable-next-line no-console
-            console.log('Доступные токены пользователя:');
-            userTokens.forEach(token => {
-                console.log(`- ${token.symbol} (${token.name}): ${token.address}, баланс: ${token.balance}`);
-            });
-        }
-    }, [userTokens]);
+
 
     // Автоматически выставляем fromToken и toToken при появлении userTokens
     useEffect(() => {

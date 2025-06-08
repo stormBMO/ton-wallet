@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useTonConnectUI } from '@tonconnect/ui-react';
 
 import { RootState, AppDispatch } from '@/store';
 import { setConnectWalletModalOpen } from '@/store/slices/ui/uiSlice';
@@ -10,7 +9,6 @@ import { useWalletAuth } from './useWalletAuth';
 import { useNotify } from '@/hooks/useNotify';
 import { loadWalletData } from '@/store/thunks/wallet';
 import { fetchTonRates } from '@/store/thunks/wallet';
-import { fetchRiskMetrics } from '@/store/thunks/risk';
 import { selectTokens, selectTotalTonValue } from '@/store/selectors/wallet';
 
 export const useDashboard = () => {
@@ -49,15 +47,7 @@ export const useDashboard = () => {
         }
     }, [tokens, network, dispatch]);
 
-    // Загружаем риск-метрики из второй ручки (risk_v2)
-    useEffect(() => {
-        if (!isAuthenticated || !walletAddress) return;
-        tokens.forEach(token => {
-            if (token.address) {
-                dispatch(fetchRiskMetrics({ address: token.address, apiType: 'v2' }));
-            }
-        });
-    }, [tokens, isAuthenticated, walletAddress, dispatch]);
+    // Риск-метрики загружаются автоматически в loadWalletData
 
     const displayTokens = useMemo(() => {
         return tokens.map(token => ({

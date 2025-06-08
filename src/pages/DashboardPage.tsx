@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { TokenDetailModal } from '@/components/modals/TokenDetailModal';
 import useNotify from '@/hooks/useNotify';
 
+
 export const Dashboard = () => {
     const { isBalancesLoading, dataError, displayTokens, isAuthenticated, authStatus, walletAddress, totalTonValue } = useDashboard();
     const {
@@ -81,6 +82,8 @@ export const Dashboard = () => {
         setSelectedTokenAddress(null);
     };
 
+
+
     const selectedTokenData = selectedTokenAddress 
         ? displayTokens.find(token => token.address === selectedTokenAddress) 
         : null;
@@ -105,6 +108,8 @@ export const Dashboard = () => {
                     onDeposit={handleDeposit}
                     onWithdraw={handleWithdraw}
                 />
+
+
 
                 {dataError && (
                     (dataError === 'WALLET_NOT_FOUND' || dataError === 'nonexist') ? (

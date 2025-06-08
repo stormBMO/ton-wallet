@@ -9,4 +9,4 @@ export const SUPPORTED_NETWORKS: Network[] = [
     MAINNET_NETWORK,
 ];
 
-export const DEFAULT_NETWORK: Network = TESTNET_NETWORK;
+export const DEFAULT_NETWORK: Network = MAINNET_NETWORK;

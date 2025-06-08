@@ -56,7 +56,7 @@ export async function fetchRiskV1(address: string): Promise<RiskMetrics> {
     return data;
 }
 
-export async function fetchRiskV2(address: string): Promise<RiskV2Metrics> {
+export async function fetchRiskV2(address: string, network: 'mainnet' | 'testnet' = 'mainnet'): Promise<RiskV2Metrics> {
     if (!isValidTokenAddress(address)) {
         throw new Error(`Invalid token address: ${address}`);
     }
@@ -66,14 +66,17 @@ export async function fetchRiskV2(address: string): Promise<RiskV2Metrics> {
     
     // Используем query параметр вместо path параметра для решения проблемы с URL encoding
     const { data } = await apiClient.get<RiskV2Metrics>(`/api/risk_v2/`, {
-        params: { token_address: convertedAddress }
+        params: { 
+            token_address: convertedAddress,
+            network: network
+        }
     });
     return data;
 }
 
-export async function fetchRisk(address: string, apiType: RiskApiType = 'v2') {
+export async function fetchRisk(address: string, apiType: RiskApiType = 'v2', network: 'mainnet' | 'testnet' = 'mainnet') {
     if (apiType === 'v2') {
-        return fetchRiskV2(address);
+        return fetchRiskV2(address, network);
     }
     return fetchRiskV1(address);
 } 

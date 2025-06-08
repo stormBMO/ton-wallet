@@ -18,7 +18,7 @@ export interface WalletState {
 const initialState: WalletState = {
     address: null,
     mnemonic: null,
-    network: 'testnet',
+    network: 'mainnet',
     status: 'idle',
     error: null,
     tokens: [],
@@ -40,9 +40,9 @@ export const walletSlice = createSlice({
         },
         setNetwork: (state, action: PayloadAction<Network>) => {
             state.network = action.payload;
-            // При смене сети отключаем кошелек
-            state.address = null;
-            state.status = 'idle';
+            // При смене сети сохраняем подключение, только сбрасываем токены
+            state.tokens = [];
+            state.totalTonValue = '0';
         },
         setStatus: (state, action: PayloadAction<WalletState['status']>) => {
             state.status = action.payload;
@@ -73,8 +73,13 @@ export const walletSlice = createSlice({
       
             state.totalTonValue = totalValue.toFixed(4);
         },
-        resetWallet: () => {
-            return initialState;
+        resetWallet: (state) => {
+            // Сохраняем текущую сеть при сбросе кошелька
+            const currentNetwork = state.network;
+            return {
+                ...initialState,
+                network: currentNetwork
+            };
         },
     },
     extraReducers: (builder) => {
@@ -96,7 +101,14 @@ export const walletSlice = createSlice({
                 state.error = null;
             })
             .addCase(fetchRiskMetrics.fulfilled, (state, action) => {
-                state.riskScore = action.payload.contract_risk;
+                // Проверяем тип payload и извлекаем правильное поле
+                if ('contract_risk' in action.payload) {
+                    // V1 API
+                    state.riskScore = action.payload.contract_risk;
+                } else if ('contract_risk_score' in action.payload) {
+                    // V2 API
+                    state.riskScore = action.payload.contract_risk_score || 0;
+                }
                 state.isLoading = false;
             })
             .addCase(fetchRiskMetrics.rejected, (state, action) => {

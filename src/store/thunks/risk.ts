@@ -6,13 +6,13 @@ export type RiskThunkResult = RiskMetrics | RiskV2Metrics;
 
 export const fetchRiskMetrics = createAsyncThunk<
   RiskThunkResult,
-  { address: string; apiType?: RiskApiType },
+  { address: string; apiType?: RiskApiType; network?: 'mainnet' | 'testnet' },
   { rejectValue: string }
 >(
     'risk/fetchRiskMetrics',
-    async ({ address, apiType = 'v2' }, { rejectWithValue }) => {
+    async ({ address, apiType = 'v2', network = 'mainnet' }, { rejectWithValue }) => {
         try {
-            const data = await fetchRisk(address, apiType);
+            const data = await fetchRisk(address, apiType, network);
             return data;
         } catch (error: unknown) {
             if (error && typeof error === 'object' && 'response' in error) {

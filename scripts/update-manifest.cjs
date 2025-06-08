@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Обновите здесь свой ngrok URL
-const APP_URL = 'https://bc59-138-199-27-206.ngrok-free.app';
+const APP_URL = 'https://9b27-169-150-228-23.ngrok-free.app';
 
 // Извлекаем домен для проверки
 const extractDomain = (url) => {

@@ -6,6 +6,8 @@ import { fadeIn } from '@/lib/motion'; // Предполагается, что f
 import { XMarkIcon } from '@heroicons/react/24/outline'; // Пример иконки
 import { getTonLink } from '@/lib/deeplink'; // Добавлено
 import useNotify from '@/hooks/useNotify';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 // Предполагается, что тип Token определен где-то глобально или импортирован
 // Для примера, определим его здесь, если он еще не определен:
@@ -23,9 +25,10 @@ interface ReceiveModalProps {
 
 export const ReceiveModal: FC<ReceiveModalProps> = ({ token, userAddress, onClose }) => {
     const notify = useNotify();
+    const network = useSelector((state: RootState) => state.wallet.network);
     const deeplink = useMemo(() => {
-        return getTonLink(userAddress, token); // Используем getTonLink
-    }, [token, userAddress]);
+        return getTonLink(userAddress, network, token); // Используем getTonLink
+    }, [token, userAddress, network]);
 
     const handleCopy = () => {
         copy(deeplink);

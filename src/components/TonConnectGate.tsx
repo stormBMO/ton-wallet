@@ -44,25 +44,17 @@ const TonConnectGate = () => {
         const tonProof = wallet?.connectItems?.tonProof;
         const isProofOk = tonProof && typeof tonProof === 'object' && 'proof' in tonProof;
         
-        console.log('=== TonConnectGate useEffect ===');
-        console.log('Wallet exists:', !!wallet);
-        console.log('Wallet address:', wallet?.account?.address);
-        console.log('TonProof exists:', !!tonProof);
-        console.log('TonProof structure valid:', isProofOk);
+
         
         if (wallet && wallet.account?.address && isProofOk) {
-            console.log('✅ All conditions met, starting auth process...');
-            console.log('Account address:', wallet.account.address);
-            console.log('Account publicKey:', wallet.account.publicKey);
-            console.log('TonProof payload:', tonProof.proof.payload);
-            console.log('TonProof signature:', tonProof.proof.signature);
+
             
             // Устанавливаем адрес в store сразу
             dispatch(setAddress(wallet.account.address));
             
             // Выполняем авторизацию через TON Connect
             tonConnectLogin(wallet).then(() => {
-                console.log('✅ TON Connect авторизация успешна');
+
                 // После успешной авторизации кошелек остается подключенным для транзакций
             }).catch((error) => {
                 console.error('❌ Ошибка TON Connect авторизации:', error);
@@ -70,17 +62,6 @@ const TonConnectGate = () => {
                 // При ошибке отключаем кошелек
                 tonConnectUI.disconnect();
             });
-        } else {
-            console.log('⏳ Waiting for wallet connection...');
-            if (wallet) {
-                console.log('Wallet connected but missing data:');
-                console.log('- Address:', wallet.account?.address);
-                console.log('- TonProof valid:', isProofOk);
-                if (tonProof) {
-                    console.log('- TonProof type:', typeof tonProof);
-                    console.log('- TonProof data:', tonProof);
-                }
-            }
         }
     }, [wallet, dispatch, tonConnectLogin, tonConnectUI]);
 

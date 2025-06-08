@@ -5,6 +5,7 @@ import { useState, useCallback } from 'react';
 import { useWalletAuth } from '../hooks/useWalletAuth';
 import { Link } from 'react-router-dom';
 import useNotify from '@/hooks/useNotify';
+import { setConnectWalletModalOpen } from '@/store/slices/ui/uiSlice';
 
 const Header = () => {
     const dispatch = useDispatch();
@@ -55,7 +56,12 @@ const Header = () => {
                         <button onClick={handleLogout} className="px-4 py-1.5 rounded-full bg-ton-blue hover:bg-ton-blue/90 text-white font-semibold transition">Выйти</button>
                     </>
                 ) : (
-                    <button onClick={handleLogout} className="px-4 py-1.5 rounded-full bg-ton-blue hover:bg-ton-blue/90 text-white font-semibold transition">Войти</button>
+                    <button 
+                        onClick={() => dispatch(setConnectWalletModalOpen(true))} 
+                        className="px-4 py-1.5 rounded-full bg-ton-blue hover:bg-ton-blue/90 text-white font-semibold transition"
+                    >
+                        Войти
+                    </button>
                 )}
             </div>
             {/* Мобильное меню */}
