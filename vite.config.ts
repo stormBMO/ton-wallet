@@ -1,7 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { APP_CONFIG } from './src/config/constants'
 
+// Извлекаем домен из URL для allowedHosts
+const extractDomain = (url: string) => {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return url; // Если не URL, возвращаем как есть
+    }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -45,6 +54,12 @@ export default defineConfig({
         },
     },
     server: {
-        allowedHosts: ['e5b3-79-127-252-80.ngrok-free.app'],
+        host: '0.0.0.0', // Разрешаем подключения с любых IP
+        allowedHosts: [
+            'localhost',
+            '127.0.0.1',
+            extractDomain(APP_CONFIG.APP_URL), // Извлекаем только домен из ngrok URL
+            '.ngrok-free.app', // Разрешаем все ngrok домены
+        ],
     },
 })

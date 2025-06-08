@@ -43,7 +43,12 @@ export const loginWithWallet = createAsyncThunk(
                 throw new Error('Не передан ни privateKey, ни signature');
             }
 
-            const verifyResponse = await apiClient.post('/api/auth/verify_signature', {
+            // Выбираем endpoint в зависимости от типа авторизации
+            const endpoint = (payload.signature && payload.nonce) 
+                ? '/api/auth/verify_ton_connect'  // TON Connect
+                : '/api/auth/verify_signature';   // Старый способ (seed)
+
+            const verifyResponse = await apiClient.post(endpoint, {
                 address: payload.address,
                 public_key: payload.publicKey,
                 nonce,

@@ -1,18 +1,10 @@
 import { TonConnect } from '@tonconnect/sdk';
-import { TonConnectUI } from '@tonconnect/ui-react';
+import { TON_CONNECT_CONFIG } from '@/config/constants';
 
-const manifestUrl = 'https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json';
+const manifestUrl = TON_CONNECT_CONFIG.MANIFEST_URL;
 
 export const createTonConnect = () => {
-    const connector = new TonConnect({ manifestUrl });
-    const tonConnectUI = new TonConnectUI({
-        connector,
-        uiPreferences: {
-            theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'DARK' : 'LIGHT'
-        }
-    });
-
-    return { connector, tonConnectUI };
+    return new TonConnect({ manifestUrl });
 };
 
 export const formatAddress = (address: string): string => {

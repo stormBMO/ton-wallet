@@ -121,19 +121,16 @@ const ConnectWalletModal: React.FC = () => {
     const [createError, setCreateError] = useState<string | null>(null);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+    // Закрываем модальное окно если пользователь успешно подключился через TON Connect
     useEffect(() => {
-        if (wallet && wallet.account?.address) {
-            login({
-                address: wallet.account.address,
-                publicKey: wallet.account.publicKey || '',
-                privateKey: Buffer.from('')
-            }).finally(() => {
+        if (wallet && wallet.account?.address && mode === 'tonconnect') {
+            // Даем время TonConnectGate обработать подключение
+            setTimeout(() => {
                 dispatch(setConnectWalletModalOpen(false));
                 navigate('/');
-            });
+            }, 1000);
         }
-    }, [wallet]);
-
+    }, [wallet, mode, dispatch, navigate]);
 
     const handleClose = () => {
         dispatch(setConnectWalletModalOpen(false));
@@ -170,7 +167,7 @@ const ConnectWalletModal: React.FC = () => {
             });
             handleClose();
             navigate('/');
-        } catch (e) {
+        } catch {
             setImportError('Ошибка при импорте кошелька. Проверьте правильность мнемоники.');
             dispatch(setStatus('error'));
         } finally {
@@ -197,7 +194,7 @@ const ConnectWalletModal: React.FC = () => {
             await navigator.clipboard.writeText(generatedMnemonic.join(' '));
             setCopySuccess(true);
             setTimeout(() => setCopySuccess(false), 2000);
-        } catch (err) {
+        } catch {
             setCreateError('Не удалось скопировать фразу');
         }
     };
@@ -236,7 +233,7 @@ const ConnectWalletModal: React.FC = () => {
                 dispatch(setStatus('connected'));
                 handleClose();
                 navigate('/');
-            } catch (error) {
+            } catch {
                 setCreateError('Ошибка при создании кошелька');
                 dispatch(setStatus('error'));
             }

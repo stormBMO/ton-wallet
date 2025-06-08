@@ -26,8 +26,9 @@ import { store } from './store';
 import { ToastProvider } from './components/ui/ToastProvider';
 import App from './App';
 import './index.css';
+import { TON_CONNECT_CONFIG } from './config/constants';
 
-const manifestUrl = 'https://ton-connect.github.io/demo-dapp-with-react-ui/tonconnect-manifest.json';
+const manifestUrl = TON_CONNECT_CONFIG.MANIFEST_URL;
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

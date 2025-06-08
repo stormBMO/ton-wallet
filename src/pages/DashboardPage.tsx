@@ -2,9 +2,11 @@ import { motion } from 'framer-motion';
 import { staggerContainer } from '../lib/motion';
 import { TokenCard } from '../components/ui/TokenCard';
 import { ReceiveModal } from '@/components/modals/ReceiveModal';
+import { SendModal } from '@/components/modals/SendModal';
 import '../index.css';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useReceiveModal } from '@/hooks/useReceiveModal';
+import { useSendModal } from '@/hooks/useSendModal';
 import { BalanceCard } from '@/components/BalanceCard';
 import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -19,6 +21,12 @@ export const Dashboard = () => {
         isReceiveModalOpen,
         receiveModalData,
     } = useReceiveModal();
+    const {
+        openSendModal,
+        closeSendModal,
+        isSendModalOpen,
+        sendModalData,
+    } = useSendModal();
     const notify = useNotify();
     const [selectedTokenAddress, setSelectedTokenAddress] = useState<string | null>(null);
 
@@ -58,7 +66,11 @@ export const Dashboard = () => {
     };
 
     const handleWithdraw = () => {
-        notify('error', 'Функция вывода средств в разработке!');
+        if (walletAddress && tonTokenForDisplay) {
+            openSendModal(tonTokenForDisplay, walletAddress);
+        } else {
+            notify('error', 'Кошелек не подключен или TON токен не найден');
+        }
     };
 
     const handleTokenCardClick = (address: string) => {
@@ -150,6 +162,17 @@ export const Dashboard = () => {
                         token={receiveModalData.token}
                         userAddress={receiveModalData.userAddress}
                         onClose={closeReceiveModal}
+                    />
+                )}
+
+                {isSendModalOpen && sendModalData && (
+                    <SendModal
+                        token={sendModalData.token}
+                        userAddress={sendModalData.userAddress}
+                        onClose={closeSendModal}
+                        onSuccess={(txHash) => {
+                            notify('success', `Транзакция отправлена! Hash: ${txHash.slice(0, 8)}...`);
+                        }}
                     />
                 )}
             </motion.div>
