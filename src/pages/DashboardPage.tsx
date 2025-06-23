@@ -12,6 +12,8 @@ import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { TokenDetailModal } from '@/components/modals/TokenDetailModal';
 import useNotify from '@/hooks/useNotify';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 
 
 export const Dashboard = () => {
@@ -29,6 +31,7 @@ export const Dashboard = () => {
         sendModalData,
     } = useSendModal();
     const notify = useNotify();
+    const menuOpen = useSelector((state: RootState) => state.ui.isMenuOpen);
     const [selectedTokenAddress, setSelectedTokenAddress] = useState<string | null>(null);
 
     if (authStatus === 'loading') {
@@ -89,7 +92,7 @@ export const Dashboard = () => {
         : null;
 
     return (
-        <div className="min-h-screen px-4 py-10">
+        <div className={`min-h-screen px-4 py-10 transition-all duration-300 ${menuOpen ? 'blur-sm scale-95 pointer-events-none' : ''}`}>
             <motion.div
                 variants={staggerContainer}
                 initial="hidden"

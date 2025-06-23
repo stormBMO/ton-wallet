@@ -5,6 +5,7 @@ export interface UiState {
   isCreateWalletModalOpen: boolean;
   isConnectWalletModalOpen: boolean;
   isImportWalletModalOpen: boolean;
+  isMenuOpen: boolean;
 }
 
 const initialState: UiState = {
@@ -12,6 +13,7 @@ const initialState: UiState = {
     isCreateWalletModalOpen: false,
     isConnectWalletModalOpen: false,
     isImportWalletModalOpen: false,
+    isMenuOpen: false,
 };
 
 export const uiSlice = createSlice({
@@ -30,6 +32,9 @@ export const uiSlice = createSlice({
         setImportWalletModalOpen: (state, action: PayloadAction<boolean>) => {
             state.isImportWalletModalOpen = action.payload;
         },
+        setMenuOpen: (state, action: PayloadAction<boolean>) => {
+            state.isMenuOpen = action.payload;
+        },
     },
 });
 
@@ -38,6 +43,7 @@ export const {
     setCreateWalletModalOpen,
     setConnectWalletModalOpen,
     setImportWalletModalOpen,
+    setMenuOpen,
 } = uiSlice.actions;
 
 export const uiReducer = uiSlice.reducer;
