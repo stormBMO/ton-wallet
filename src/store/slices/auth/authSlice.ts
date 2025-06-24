@@ -32,11 +32,9 @@ export const loginWithWallet = createAsyncThunk(
             let signatureBase64: string;
             let nonce: string;
             if (payload.signature && payload.nonce) {
-                // TonConnect: подпись уже есть
                 signatureBase64 = payload.signature;
                 nonce = payload.nonce;
             } else if (payload.privateKey) {
-                // Старый способ: подписываем сами
                 const nonceResponse = await apiClient.get('/api/auth/request_nonce');
                 nonce = nonceResponse.data.nonce;
                 const signature = sign(Buffer.from(nonce, 'hex'), payload.privateKey);
@@ -45,10 +43,9 @@ export const loginWithWallet = createAsyncThunk(
                 throw new Error('Не передан ни privateKey, ни signature');
             }
 
-            // Выбираем endpoint в зависимости от типа авторизации
             const endpoint = (payload.signature && payload.nonce) 
-                ? '/api/auth/verify_ton_connect'  // TON Connect
-                : '/api/auth/verify_signature';   // Старый способ (seed)
+                ? '/api/auth/verify_ton_connect' 
+                : '/api/auth/verify_signature';  
 
             const requestData = {
                 address: payload.address,

@@ -4,14 +4,12 @@ import { RootState } from "../index";
 import { fetchQuoteFromAPI, fetchUserTokensFromAPI, sendSwapTransaction, convertAmount } from "@/api/swapApi";
 import { TonConnectUI } from '@tonconnect/ui-react';
 
-// Функция для преобразования символа токена в адрес
 const getTokenAddress = (symbol: string, userTokens: any[]): string => {
-    if (symbol === 'TON') return 'TON'; // MyTonSwap понимает 'TON' для нативного токена
+    if (symbol === 'TON') return 'TON'; 
     const token = userTokens.find((t: any) => t.symbol === symbol);
     return token ? token.address : symbol;
 };
 
-// Базовые функции
 export const getQuote = createAsyncThunk(
     'swap/getQuote',
     async ({ 
@@ -32,7 +30,6 @@ export const getQuote = createAsyncThunk(
                 return rejectWithValue('Кошелек не подключен');
             }
 
-            // Преобразуем символы в адреса для API
             const fromTokenAddress = getTokenAddress(fromToken, userTokens);
             const toTokenAddress = getTokenAddress(toToken, userTokens);
 
@@ -62,14 +59,12 @@ export const calcFee = async ({ fromToken, toToken, amount, _network = 'mainnet'
   amount: string; 
   _network?: 'testnet' | 'mainnet' 
 }) => {
-    const baseGasAmount = '0.05'; // Базовая комиссия TON в газе
-    const swapGasAmount = '0.1'; // Комиссия для свопа
+    const baseGasAmount = '0.05'; 
+    const swapGasAmount = '0.1'; 
   
-    // Преобразуем в наноTON (10^9)
     const baseGas = TonWeb.utils.toNano(baseGasAmount);
     const swapGas = TonWeb.utils.toNano(swapGasAmount);
   
-    // Общая комиссия
     const totalFee = (BigInt(baseGas) + BigInt(swapGas)).toString();
   
     return {
@@ -94,14 +89,12 @@ export const checkBalance = createAsyncThunk(
             const state = getState() as RootState;
             const userTokens = (state.wallet.tokens || []);
       
-            // Находим токен в списке токенов пользователя
             const userToken = userTokens.find((t) => t.address === token);
       
             if (!userToken) {
                 return rejectWithValue(`Токен ${token} не найден в кошельке`);
             }
       
-            // Проверяем, достаточно ли средств
             const hasEnoughBalance = BigInt(userToken.balance) >= BigInt(amount);
       
             return {
@@ -133,7 +126,6 @@ export const getUserTokens = createAsyncThunk(
 
             const tokens = await fetchUserTokensFromAPI(address, network);
       
-            // Форматируем балансы для отображения
             return tokens.map(token => ({
                 ...token,
                 balanceFormatted: convertAmount.fromNano(token.balance)
@@ -159,13 +151,8 @@ export const fetchQuote = createAsyncThunk<
     }
 });
 
-// Добавляю type guard для проверки структуры payload
 function isCheckBalancePayload(payload: unknown): payload is { hasEnoughBalance: boolean } {
     return typeof payload === 'object' && payload !== null && 'hasEnoughBalance' in payload;
-}
-
-function getOriginalContract<T>(opened: any): T {
-    return opened.contract || opened._contract || opened;
 }
 
 export const swapThunk = createAsyncThunk(
@@ -188,7 +175,6 @@ export const swapThunk = createAsyncThunk(
             if (!userAddress) {
                 return rejectWithValue('Кошелек не подключен');
             }
-            // Проверяем баланс
             const checkBalanceResult = await dispatch(checkBalance({ 
                 token: fromToken, 
                 amount 
@@ -200,7 +186,6 @@ export const swapThunk = createAsyncThunk(
             } else {
                 return rejectWithValue('Не удалось проверить баланс');
             }
-            // Получаем маршрут и payload через MyTonSwap SDK
             const userTokens = state.wallet.tokens || [];
             const fromTokenAddress = getTokenAddress(fromToken, userTokens);
             const toTokenAddress = getTokenAddress(toToken, userTokens);

@@ -8,7 +8,6 @@ import ConnectWalletModal from './components/modals/ConnectWalletModal';
 import { SettingsPage } from './pages/SettingsPage';
 import TonConnectGate from './components/TonConnectGate';
 
-
 function App() {
     return (
         <PersistGate loading={null} persistor={persistor}>

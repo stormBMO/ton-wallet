@@ -1,22 +1,7 @@
 import { Address, beginCell, toNano } from '@ton/core';
 import { TonConnectUI } from '@tonconnect/ui-react';
+import { SendTransactionParams, SendResult } from './types';
 
-export interface SendTransactionParams {
-  to: string;
-  amount: string; // В TON (человекочитаемый формат)
-  comment?: string;
-  jettonAddress?: string; // Для jetton transfers
-}
-
-export interface SendResult {
-  success: boolean;
-  txHash?: string;
-  error?: string;
-}
-
-/**
- * Валидирует TON адрес
- */
 export const validateTonAddress = (address: string): boolean => {
     try {
         Address.parse(address);
@@ -26,19 +11,13 @@ export const validateTonAddress = (address: string): boolean => {
     }
 };
 
-/**
- * Создает payload для комментария
- */
 const createCommentPayload = (comment: string) => {
     return beginCell()
-        .storeUint(0, 32) // op code для комментария
+        .storeUint(0, 32)
         .storeStringTail(comment)
         .endCell();
 };
 
-/**
- * Отправляет TON транзакцию
- */
 export const sendTonTransaction = async (
     params: SendTransactionParams,
     tonConnectUI: TonConnectUI
@@ -46,7 +25,6 @@ export const sendTonTransaction = async (
     try {
         const { to, amount, comment } = params;
 
-        // Валидация адреса
         if (!validateTonAddress(to)) {
             return {
                 success: false,
@@ -54,7 +32,6 @@ export const sendTonTransaction = async (
             };
         }
 
-        // Подготавливаем сообщение
         const message: {
       address: string;
       amount: string;
@@ -64,14 +41,12 @@ export const sendTonTransaction = async (
         amount: toNano(amount).toString()
     };
 
-        // Добавляем комментарий если есть
         if (comment && comment.trim()) {
             message.payload = createCommentPayload(comment.trim()).toBoc().toString('base64');
         }
 
-        // Отправляем транзакцию
         const result = await tonConnectUI.sendTransaction({
-            validUntil: Math.floor(Date.now() / 1000) + 600, // 10 минут
+            validUntil: Math.floor(Date.now() / 1000) + 600,
             messages: [message]
         });
 
@@ -94,13 +69,9 @@ export const sendTonTransaction = async (
     }
 };
 
-/**
- * Рассчитывает примерную комиссию для транзакции
- */
 export const estimateTransactionFee = (params: SendTransactionParams): string => {
-    // Простая оценка комиссий
     if (params.jettonAddress) {
-        return '0.1'; // Jetton transfer
+        return '0.1';
     }
-    return '0.01'; // TON transfer
+    return '0.01';
 }; 

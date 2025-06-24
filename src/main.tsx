@@ -27,6 +27,11 @@ import { ToastProvider } from './components/ui/ToastProvider';
 import App from './App';
 import './index.css';
 import { TON_CONNECT_CONFIG } from './config/constants';
+import { init, isTMA } from '@telegram-apps/sdk';
+
+if (isTMA()) {
+    init();
+}
 
 const manifestUrl = TON_CONNECT_CONFIG.MANIFEST_URL;
 

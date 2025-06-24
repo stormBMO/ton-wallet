@@ -35,10 +35,8 @@ export const SendModal: FC<SendModalProps> = ({
     const wallet = useTonWallet();
     const notify = useNotify();
     
-    // Проверяем подключение кошелька
     const isWalletConnected = !!wallet;
 
-    // Валидация
     const isValidAddress = useMemo(() => {
         if (!recipientAddress.trim()) return null;
         return validateTonAddress(recipientAddress.trim());
@@ -76,15 +74,12 @@ export const SendModal: FC<SendModalProps> = ({
             let result;
       
             if (token.symbol === 'TON') {
-                // Отправка TON
                 result = await sendTonTransaction({
                     to: recipientAddress.trim(),
                     amount: amount.trim(),
                     comment: comment.trim()
                 }, tonConnectUI);
             } else if (token.address) {
-                // Отправка Jetton (требуется jetton wallet address пользователя)
-                // В реальном приложении нужно получить jetton wallet address для этого токена
                 notify('error', 'Отправка jetton токенов будет реализована в следующей версии');
                 return;
             } else {
@@ -109,7 +104,6 @@ export const SendModal: FC<SendModalProps> = ({
 
     const handleMaxAmount = () => {
         if (token.symbol === 'TON') {
-            // Оставляем немного для комиссии
             const maxAmount = Math.max(0, parseFloat(token.balance) - parseFloat(estimatedFee));
             setAmount(maxAmount.toString());
         } else {
@@ -130,7 +124,6 @@ export const SendModal: FC<SendModalProps> = ({
                 className="glasscard p-6 rounded-lg shadow-xl w-full max-w-md flex flex-col gap-4"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Заголовок */}
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <FaArrowUp className="text-lg" />
@@ -144,9 +137,7 @@ export const SendModal: FC<SendModalProps> = ({
                     </button>
                 </div>
 
-                {/* Форма */}
                 <div className="flex flex-col gap-4">
-                    {/* Адрес получателя */}
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Адрес получателя:
@@ -166,11 +157,10 @@ export const SendModal: FC<SendModalProps> = ({
                         )}
                     </div>
 
-                    {/* Сумма */}
                     <div className="flex flex-col gap-2">
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Сумма:
+                                Сумма:
                             </label>
                             <span className="text-xs text-gray-500">
                 Баланс: {token.balance} {token.symbol}
@@ -204,7 +194,6 @@ export const SendModal: FC<SendModalProps> = ({
                         )}
                     </div>
 
-                    {/* Комментарий */}
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Комментарий (опционально):
@@ -222,7 +211,6 @@ export const SendModal: FC<SendModalProps> = ({
                         </p>
                     </div>
 
-                    {/* Комиссия */}
                     <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
                         <div className="flex justify-between text-sm">
                             <span>Примерная комиссия:</span>
@@ -230,7 +218,6 @@ export const SendModal: FC<SendModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Предупреждение о неподключенном кошельке */}
                     {!isWalletConnected && (
                         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded-lg">
                             <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
@@ -243,7 +230,6 @@ export const SendModal: FC<SendModalProps> = ({
                         </div>
                     )}
 
-                    {/* Кнопка отправки */}
                     <button
                         onClick={handleSend}
                         disabled={!canSend}
@@ -256,20 +242,19 @@ export const SendModal: FC<SendModalProps> = ({
                         {isLoading ? (
                             <>
                                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                Отправка...
+                                Отправка...
                             </>
                         ) : (
                             <>
                                 <FaPaperPlane />
-                Отправить {amount} {token.symbol}
+                                Отправить {amount} {token.symbol}
                             </>
                         )}
                     </button>
                 </div>
 
-                {/* Предупреждение */}
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          Проверьте адрес получателя. Транзакции в блокчейне необратимы.
+                    Проверьте адрес получателя. Транзакции в блокчейне необратимы.
                 </p>
             </motion.div>
         </motion.div>

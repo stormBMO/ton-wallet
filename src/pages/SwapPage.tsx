@@ -14,7 +14,6 @@ interface ConfirmSwapModalProps {
     onConfirm: () => void | Promise<void>;
 }
 
-// Заглушка для ConfirmSwapModal
 const ConfirmSwapModal = ({ open, onClose, amount, rate, fee, onConfirm }: ConfirmSwapModalProps) => {
     if (!open) return null;
     return (
@@ -44,7 +43,6 @@ const ConfirmSwapModal = ({ open, onClose, amount, rate, fee, onConfirm }: Confi
     );
 };
 
-// Простая модалка для ошибок и успеха
 const SimpleModal = ({ open, onClose, title, message }: { open: boolean, onClose: () => void, title: string, message: string }) => {
     if (!open) return null;
     return (
@@ -69,7 +67,6 @@ const SimpleModal = ({ open, onClose, title, message }: { open: boolean, onClose
     );
 };
 
-// Компонент MyTonSwap Widget (официальный)
 const MyTonSwapWidget = () => {
     const [tonConnectUI] = useTonConnectUI();
     const initMount = useRef(false);
@@ -95,10 +92,7 @@ const MyTonSwapWidget = () => {
 
     return (
         <div className="glasscard p-6">
-            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white text-center">
-                MyTonSwap Widget (официальный)
-            </h2>
-            <div id="mytonswap-widget" style={{ minHeight: '500px' }}></div>
+            <div id="mytonswap-widget" style={{ minHeight: '500px', width: '100%', maxWidth: '100%', overflow: 'auto', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', alignItems: 'center' }}></div>
         </div>
     );
 };
@@ -111,24 +105,17 @@ export const SwapPage = () => {
         performSwap
     } = useSwap();
 
-    // Переключатель между реализациями
-    const [useWidget, setUseWidget] = React.useState(false);
+    const [useWidget, setUseWidget] = React.useState(true);
 
-
-
-    // Автоматически выставляем fromToken и toToken при появлении userTokens
     useEffect(() => {
         if (userTokens.length > 0) {
-            // Найти TON (Toncoin) и USDT (или любой jetton)
             const tonToken = userTokens.find(t => t.symbol.toUpperCase().includes('TON'));
             const usdtToken = userTokens.find(t => t.symbol.toUpperCase().includes('USDT'));
             
-            // Если fromToken не валиден — выставить TON или первый токен
             if (!userTokens.some(t => t.symbol === fromToken)) {
                 setFromToken(tonToken?.symbol || userTokens[0].symbol);
             }
             
-            // Если toToken совпадает с fromToken или не валиден — выбрать USDT или другой jetton
             if (fromToken === toToken || !userTokens.some(t => t.symbol === toToken)) {
                 let alt = userTokens.find(t => t.symbol !== fromToken && t.symbol !== tonToken?.symbol);
                 if (!alt && usdtToken && usdtToken.symbol !== fromToken) alt = usdtToken;
@@ -147,13 +134,11 @@ export const SwapPage = () => {
         performSwap();
     };
 
-    // Функция для получения названия токена по символу (для совместимости)
     const getTokenName = (symbol: string) => {
         const token = userTokens.find(t => t.symbol === symbol);
         return token ? token.symbol : symbol;
     };
 
-    // Если нет токенов или не загружены — показываем заглушку
     if (!userTokens || userTokens.length === 0) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -163,34 +148,14 @@ export const SwapPage = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-md min-h-screen flex flex-col justify-center">
+        <div className="container mx-auto px-4 py-8 max-w-xl min-h-screen flex flex-col justify-center">
             <motion.div
                 variants={fadeIn}
                 initial="hidden"
                 animate="show"
             >
-                <h1 className="text-2xl font-semibold text-center mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Своп токенов</h1>
+                <h1 className="text-2xl font-semibold text-center mb-8 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent" onClick={() => setUseWidget(!useWidget)}>Своп токенов</h1>
                 
-                {/* Переключатель между реализациями */}
-                <div className="glasscard p-4 mb-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                            {useWidget ? 'MyTonSwap Widget' : 'Собственная реализация'}
-                        </span>
-                        <button
-                            onClick={() => setUseWidget(!useWidget)}
-                            className="px-3 py-1 rounded-lg bg-primary text-white text-sm"
-                        >
-                            {useWidget ? 'Переключить на собственную' : 'Использовать виджет'}
-                        </button>
-                    </div>
-                    {rateError && (
-                        <div className="mt-2 text-xs text-red-500">
-                            Ошибка: {rateError}. Попробуйте виджет MyTonSwap.
-                        </div>
-                    )}
-                </div>
-
                 {useWidget ? (
                     <MyTonSwapWidget />
                 ) : (
@@ -206,7 +171,6 @@ export const SwapPage = () => {
                                 className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
                                 disabled={isLoading}
                             >
-                                {/* Показываем все токены, кроме выбранного во втором поле */}
                                 {userTokens.filter(t => t.symbol !== toToken).map(t => (
                                     <option key={t.symbol} value={t.symbol}>
                                         {t.name} {t.balance ? `(${parseFloat(t.balance).toFixed(4)})` : ''}
@@ -222,7 +186,6 @@ export const SwapPage = () => {
                                 className="w-full py-3 px-4 rounded-xl border border-gray-200 dark:border-neutral-800 bg-white/50 dark:bg-white/5 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary backdrop-blur-sm"
                                 disabled={isLoading}
                             >
-                                {/* Показываем все токены, кроме выбранного в первом поле */}
                                 {userTokens.filter(t => t.symbol !== fromToken).map(t => (
                                     <option key={t.symbol} value={t.symbol}>{t.name}</option>
                                 ))}

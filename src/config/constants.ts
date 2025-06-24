@@ -1,12 +1,8 @@
-// Основные URL конфигурации
 export const APP_CONFIG = {
-    // Основной URL приложения (ngrok или localhost)
-    APP_URL: 'https://b2c0-79-127-239-83.ngrok-free.app',
+    APP_URL: 'https://38d7-79-127-224-13.ngrok-free.app',
     
-    // URL бэкенда
     BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000',
     
-    // Генерируемые URL на основе основного
     get MANIFEST_URL() {
         return `${this.APP_URL}/tonconnect-manifest.json`;
     },
@@ -24,7 +20,6 @@ export const APP_CONFIG = {
     }
 };
 
-// TON Connect конфигурация
 export const TON_CONNECT_CONFIG = {
     MANIFEST_URL: APP_CONFIG.MANIFEST_URL
 };

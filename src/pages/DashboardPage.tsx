@@ -44,9 +44,9 @@ export const Dashboard = () => {
 
     if (!isAuthenticated) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className={`flex items-center justify-center min-h-screen ${menuOpen ? 'backdrop-blur-sm blur-sm scale-95 pointer-events-none' : ''}`}>
                 <p className="text-gray-600 dark:text-gray-300 text-lg">
-          Пожалуйста, подключите кошелек для просмотра дашборда.
+                    Пожалуйста, подключите кошелек для просмотра дашборда.
                 </p>
             </div>
         );
@@ -92,7 +92,7 @@ export const Dashboard = () => {
         : null;
 
     return (
-        <div className={`min-h-screen px-4 py-10 transition-all duration-300 ${menuOpen ? 'blur-sm scale-95 pointer-events-none' : ''}`}>
+        <div className={`min-h-screen px-4 py-10 transition-all duration-300 ${menuOpen ? 'backdrop-blur-sm blur-sm scale-95 pointer-events-none' : ''}`}>
             <motion.div
                 variants={staggerContainer}
                 initial="hidden"
@@ -111,8 +111,6 @@ export const Dashboard = () => {
                     onDeposit={handleDeposit}
                     onWithdraw={handleWithdraw}
                 />
-
-
 
                 {dataError && (
                     (dataError === 'WALLET_NOT_FOUND' || dataError === 'nonexist') ? (

@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-import '@fontsource/inter';
 import ReactDOM from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -9,98 +8,10 @@ import { mnemonicToWalletKey } from '@ton/crypto';
 import { WalletContractV4 } from '@ton/ton';
 import { useWalletAuth } from '@/hooks/useWalletAuth';
 import { useNavigate } from 'react-router-dom';
-import styled from '@emotion/styled';
 import { TonConnectButton, useTonWallet } from '@tonconnect/ui-react';
 import { wordlist } from '@scure/bip39/wordlists/english';
+import { ModalBackdrop, ModalBox, CloseBtn, BigBtn, MnemonicCell } from '../styles';
 
-const ModalBackdrop = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-const ModalBox = styled.div`
-  width: 420px;
-  padding: 32px;
-  border-radius: 16px;
-  background: #fff;
-  color: #222;
-  position: relative;
-  font-family: 'Inter', Arial, sans-serif;
-  @media (prefers-color-scheme: dark) {
-    background: #1A1A1A;
-    color: #fff;
-  }
-`;
-const CloseBtn = styled.button`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  font-size: 24px;
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
-`;
-const BigBtn = styled.button`
-  font-family: 'Inter', Arial, sans-serif;
-  width: 100%;
-  padding: 18px 0;
-  margin-bottom: 16px;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 10px;
-  border: none;
-  background: #e0e7ff;
-  color: #1d4ed8;
-  cursor: pointer;
-  transition: background 0.2s;
-  &:hover {
-    background: #c7d2fe;
-  }
-  @media (prefers-color-scheme: dark) {
-    background: #232a4a;
-    color: #a5b4fc;
-    &:hover {
-      background: #334155;
-    }
-  }
-`;
-
-// Добавляю компонент для ячейки мнемоники
-const MnemonicCell = styled.div<{ editable?: boolean }>`
-  background: #f3f4f6;
-  border-radius: 6px;
-  padding: 6px;
-  font-size: 15px;
-  color: #222;
-  font-family: 'Inter', Arial, sans-serif;
-  border: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  box-sizing: border-box;
-  @media (prefers-color-scheme: dark) {
-    background: #232a4a;
-    color: #fff;
-    border: 1px solid #444;
-  }
-  input {
-    background: transparent;
-    border: none;
-    outline: none;
-    width: 100%;
-    font-size: 15px;
-    color: inherit;
-    font-family: inherit;
-    padding: 0;
-    margin: 0;
-    text-align: left;
-  }
-`;
 
 const ConnectWalletModal: React.FC = () => {
     const dispatch = useDispatch();
@@ -109,11 +20,11 @@ const ConnectWalletModal: React.FC = () => {
     const isOpen = useSelector((s: RootState) => s.ui.isConnectWalletModalOpen);
     const wallet = useTonWallet();
     const [mode, setMode] = useState<'select' | 'import' | 'create' | 'tonconnect'>('select');
-    // Импорт
+    
     const [mnemonic, setMnemonicInput] = useState('');
     const [importError, setImportError] = useState<string | null>(null);
     const [isImporting, setIsImporting] = useState(false);
-    // Создание
+    
     const [step, setStep] = useState<'generate' | 'confirm'>('generate');
     const [generatedMnemonic, setGeneratedMnemonic] = useState<string[]>([]);
     const [confirmedMnemonic, setConfirmedMnemonic] = useState<string[]>([]);
@@ -121,10 +32,9 @@ const ConnectWalletModal: React.FC = () => {
     const [createError, setCreateError] = useState<string | null>(null);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    // Закрываем модальное окно если пользователь успешно подключился через TON Connect
+    
     useEffect(() => {
         if (wallet && wallet.account?.address && mode === 'tonconnect') {
-            // Даем время TonConnectGate обработать подключение
             setTimeout(() => {
                 dispatch(setConnectWalletModalOpen(false));
                 navigate('/');
@@ -144,7 +54,6 @@ const ConnectWalletModal: React.FC = () => {
         setCreateError(null);
     };
 
-    // Импорт кошелька
     const handleImport = async () => {
         setImportError(null);
         setIsImporting(true);
@@ -175,7 +84,6 @@ const ConnectWalletModal: React.FC = () => {
         }
     };
 
-    // Создание кошелька
     const generateMnemonic = () => {
         const words = Array.from({ length: 24 }, () => {
             const randomIndex = Math.floor(Math.random() * wordlist.length);
@@ -344,7 +252,6 @@ const ConnectWalletModal: React.FC = () => {
                                                             newConfirmed[i] = words[i] || '';
                                                         }
                                                         setConfirmedMnemonic(newConfirmed);
-                                                        // Фокус на последний заполненный
                                                         const lastIdx = Math.min(words.length - 1, 23);
                                                         setTimeout(() => {
                                                             if (inputRefs.current[lastIdx]) inputRefs.current[lastIdx].focus();

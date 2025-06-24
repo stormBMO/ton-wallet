@@ -1,18 +1,5 @@
 import React from 'react';
-import styled from '@emotion/styled';
 import { FaArrowDown, FaArrowUp } from "react-icons/fa";
-
-const BalanceValue = styled.div`
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-`;
-
-const BalanceLabel = styled.div`
-  font-size: 1rem;
-  color: ${({ theme }: any) => theme?.colors?.textSecondary || '#888'};
-  margin-bottom: 16px;
-`;
 
 export interface BalanceCardProps {
   balance: string;

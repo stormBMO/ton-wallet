@@ -2,17 +2,14 @@ import { FC } from 'react';
 import { motion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
 
-// Определяем тип для объекта риска, если он известен, или используем any
-// interface RiskData { /* ... поля объекта риска ... */ }
-
 interface TokenCardProps {
   iconUrl?: string;
   symbol: string;
   balance: string;
   priceTon?: string;
-  riskData?: unknown; // Было any, теперь unknown
-  address: string; // Сделаем адрес обязательным для layoutId и onClick
-  onClick?: (address: string) => void; // Добавили onClick
+  riskData?: unknown;
+  address: string;
+  onClick?: (address: string) => void;
 }
 
 function isRiskData(obj: unknown): obj is { overall_risk_score: number } {
@@ -28,7 +25,7 @@ export const TokenCard: FC<TokenCardProps> = ({
     address,
     onClick
 }) => {
-    const riskValue = isRiskData(riskData) ? riskData.overall_risk_score : undefined; // Пример получения значения для отображения, если нужно
+    const riskValue = isRiskData(riskData) ? riskData.overall_risk_score : undefined;
 
     const getRiskColor = () => {
         if (riskValue === undefined || riskValue === null) return "bg-gray-300";
@@ -72,7 +69,6 @@ export const TokenCard: FC<TokenCardProps> = ({
       
             <div className="text-2xl font-semibold">{balance}</div>
       
-            {/* Отображаем простой риск как и раньше, если нужно */}
             {riskValue !== undefined && (
                 <div className={`px-3 py-1 rounded-full text-xs font-medium text-white w-fit ${getRiskColor()}`}>
                     {getRiskLabel()}
@@ -81,5 +77,3 @@ export const TokenCard: FC<TokenCardProps> = ({
         </motion.div>
     );
 };
-
-// export default TokenCard; // Если экспорт по умолчанию не нужен, можно убрать 

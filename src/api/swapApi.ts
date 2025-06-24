@@ -1,45 +1,11 @@
 import axios from 'axios';
-import { MyTonSwapClient, toNano, fromNano } from '@mytonswap/sdk';
+import { MyTonSwapClient, toNano, fromNano, BestRoute } from '@mytonswap/sdk';
 import TonWeb from 'tonweb';
-import { Network } from '@/store/slices/wallet/types';
+import { Network } from '@/store/types';
+import { JettonBalance, SwapRoute, TonConnectProvider } from './types';
 
 const mytonswap = new MyTonSwapClient();
 
-// Типы для MyTonSwap
-interface SwapRoute {
-    pool_data: {
-        pay: string;
-        receive: string;
-        minimumReceive: string;
-        status: boolean;
-        message?: string;
-    };
-    selected_pool?: any; // Для совместимости с BestRoute
-}
-
-interface JettonBalance {
-    jetton: {
-        address: string;
-        symbol?: string;
-        name?: string;
-        decimals?: number;
-    };
-    balance: string;
-    metadata?: {
-        symbol?: string;
-        name?: string;
-        image?: string;
-    };
-}
-
-interface TonConnectProvider {
-    sendTransaction: (args: {
-        validUntil: number;
-        messages: any[];
-    }) => Promise<any>;
-}
-
-// Инициализация TonWeb с провайдером
 const getTonWeb = (network: Network = 'mainnet') =>
     new TonWeb(
         new TonWeb.HttpProvider(
@@ -49,9 +15,6 @@ const getTonWeb = (network: Network = 'mainnet') =>
         )
     );
 
-/**
- * Получение котировки для свопа через MyTonSwap SDK
- */
 export const fetchQuoteFromAPI = async ({
     fromToken,
     toToken,
@@ -62,13 +25,9 @@ export const fetchQuoteFromAPI = async ({
   amount: string;
 }) => {
     try {
-    
-        
-        // Для TON используем стандартный способ поиска
         let fromAssetId = fromToken;
         let toAssetId = toToken;
         
-        // Если это адрес TON, пробуем искать по символу
         if (fromToken === 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c') {
             fromAssetId = 'TON';
         }
@@ -76,8 +35,6 @@ export const fetchQuoteFromAPI = async ({
         if (toToken === 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c') {
             toAssetId = 'TON';
         }
-
-
 
         const assetIn = await mytonswap.assets.getExactAsset(fromAssetId);
         const assetOut = await mytonswap.assets.getExactAsset(toAssetId);
@@ -96,8 +53,6 @@ export const fetchQuoteFromAPI = async ({
                 error: `Asset not found. From: ${fromAssetId}, To: ${toAssetId}`
             };
         }
-
-
         
         const bestRoute = await mytonswap.router.findBestRoute(
             assetIn.address,
@@ -105,8 +60,6 @@ export const fetchQuoteFromAPI = async ({
             toNano(amount),
             0.5
         );
-
-
 
         if (!bestRoute || !bestRoute.pool_data) {
             return {
@@ -162,38 +115,30 @@ export const fetchQuoteFromAPI = async ({
     }
 };
 
-/**
- * Получение списка токенов пользователя (для совместимости, но основная логика в tonApi.ts)
- */
 export const fetchUserTokensFromAPI = async (
     address: string, 
     network: Network = 'mainnet'
 ) => {
-    // Выбор API-эндпоинта в зависимости от сети
     const apiBase = network === 'testnet' 
         ? 'https://testnet.tonapi.io/v2/accounts'
         : 'https://tonapi.io/v2/accounts';
 
-    // Получаем данные о балансе TON
     const [tonResponse, jettonsResponse] = await Promise.all([
         axios.get(`${apiBase}/${address}`),
         axios.get(`${apiBase}/${address}/jettons`)
     ]);
 
-    // Получаем баланс TON
     const tonBalance = tonResponse.data.balance;
   
-    // Формируем массив токенов
     const tokens = [
         {
             symbol: 'TON',
             name: 'Toncoin',
             balance: tonBalance,
-            address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c', // Нативный адрес TON для MyTonSwap
+            address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
         }
     ];
 
-    // Добавляем информацию о Jetton-токенах
     if (jettonsResponse.data && jettonsResponse.data.balances) {
         const jettonBalances = jettonsResponse.data.balances.map((jetton: JettonBalance) => {
             return {
@@ -211,15 +156,11 @@ export const fetchUserTokensFromAPI = async (
     return tokens;
 };
 
-/**
- * Отправка транзакции свопа через MyTonSwap SDK
- */
 export const sendSwapTransaction = async (
     { bestRoute, userAddress }: { bestRoute: SwapRoute; userAddress: string },
     provider: TonConnectProvider
 ) => {
-    // Генерируем payload для TonConnect
-    const swapPayload = await mytonswap.swap.createSwap(userAddress, bestRoute);
+    const swapPayload = await mytonswap.swap.createSwap(userAddress, bestRoute as BestRoute);
     
     if ('sendTransaction' in provider) {
         return await provider.sendTransaction({
@@ -231,9 +172,6 @@ export const sendSwapTransaction = async (
     throw new Error('Неподдерживаемый провайдер кошелька');
 };
 
-/**
- * Конвертация между нано и обычными единицами
- */
 export const convertAmount = {
     toNano: (amount: string | number, _network: Network = 'mainnet'): string => {
         const tonweb = getTonWeb(_network);

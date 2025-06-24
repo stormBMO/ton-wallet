@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const APP_URL = process.env.URL || 'https://b2c0-79-127-239-83.ngrok-free.app';
+const APP_URL = process.env.URL || 'https://38d7-79-127-224-13.ngrok-free.app';
 
 const extractDomain = (url) => {
     try {
@@ -22,12 +22,12 @@ const manifest = {
 const manifestPath = path.join(__dirname, '../public/tonconnect-manifest.json');
 fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4));
 
-console.log('✅ Манифест обновлен!');
-console.log('📄 Manifest URL:', `${APP_URL}/tonconnect-manifest.json`);
-console.log('🔗 App URL:', APP_URL);
-console.log('🌐 Domain:', extractDomain(APP_URL));
+console.log('Манифест обновлен!');
+console.log(' Manifest URL:', `${APP_URL}/tonconnect-manifest.json`);
+console.log('App URL:', APP_URL);
+console.log(' Domain:', extractDomain(APP_URL));
 console.log('');
-console.log('⚠️  ВАЖНО: После смены ngrok URL нужно:');
-console.log('1️⃣  Обновить APP_URL в src/config/constants.ts');
-console.log('2️⃣  Перезапустить сервер: npm run dev');
-console.log('3️⃣  Очистить кэш TON Connect (Full Reset в Debug панели)');
+console.log('!!! ВАЖНО: После смены ngrok URL нужно: !!!');
+console.log('1. Обновить APP_URL в src/config/constants.ts');
+console.log('2. Перезапустить сервер: npm run dev');
+console.log('3. Очистить кэш TON Connect (Full Reset в Debug панели)');

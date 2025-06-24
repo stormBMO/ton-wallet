@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Network, Token } from './types';
+import { Token } from './types';
 import { fetchRiskMetrics } from '@/store/thunks/risk';
 import { loadWalletData } from '@/store/thunks/wallet';
+import { Network } from '@/store/types';
 
 export interface WalletState {
   address: string | null;
@@ -9,8 +10,8 @@ export interface WalletState {
   network: Network;
   status: 'idle' | 'loading' | 'connected' | 'error';
   error: string | null;
-  tokens: Token[];              // [{ address,symbol,name,balance, priceTon? }]
-  totalTonValue: string;        // суммарная стоимость всех токенов в TON
+  tokens: Token[];              
+  totalTonValue: string;        
   riskScore: number;
   isLoading: boolean;
 }
@@ -55,7 +56,6 @@ export const walletSlice = createSlice({
             state.tokens = action.payload;
         },
         updateRates: (state, action: PayloadAction<{ address: string; priceTon: string }[]>) => {
-            // Обновляем курсы и пересчитываем общую стоимость
             let totalValue = 0;
       
             state.tokens = state.tokens.map(token => {
@@ -63,7 +63,6 @@ export const walletSlice = createSlice({
                 if (rateInfo) {
                     token.priceTon = rateInfo.priceTon;
           
-                    // Добавляем к общей стоимости
                     if (token.balance && token.priceTon) {
                         totalValue += parseFloat(token.balance) * parseFloat(token.priceTon);
                     }
@@ -74,7 +73,6 @@ export const walletSlice = createSlice({
             state.totalTonValue = totalValue.toFixed(4);
         },
         resetWallet: (state) => {
-            // Сохраняем текущую сеть при сбросе кошелька
             const currentNetwork = state.network;
             return {
                 ...initialState,
@@ -101,12 +99,9 @@ export const walletSlice = createSlice({
                 state.error = null;
             })
             .addCase(fetchRiskMetrics.fulfilled, (state, action) => {
-                // Проверяем тип payload и извлекаем правильное поле
                 if ('contract_risk' in action.payload) {
-                    // V1 API
                     state.riskScore = action.payload.contract_risk;
                 } else if ('contract_risk_score' in action.payload) {
-                    // V2 API
                     state.riskScore = action.payload.contract_risk_score || 0;
                 }
                 state.isLoading = false;

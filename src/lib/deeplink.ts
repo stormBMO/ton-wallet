@@ -1,9 +1,9 @@
 import { Address } from '@ton/core';
-import { Network } from '@/store/slices/wallet/types';
+import { Network } from '@/store/types';
 
 export interface TokenForLink {
   symbol: string;
-  address?: string; // Адрес контракта токена, если это не TON (jetton master address)
+  address?: string; 
 }
 
 /**
@@ -41,18 +41,15 @@ export const getTonLink = (userWalletAddress: string, network: Network, token?: 
         return '';
     }
 
-    // Правильно конвертируем адрес для указанной сети
     const normalizedAddress = normalizeAddress(userWalletAddress, network);
 
     if (!token || token.symbol === 'TON') {
         return `ton://transfer/${normalizedAddress}`;
     }
   
-    // Для jetton transfers
     if (token.address) {
         return `ton://transfer/${normalizedAddress}?jetton=${token.address}`;
     }
     
-    // Fallback
     return `ton://transfer/${normalizedAddress}`;
 }; 

@@ -6,23 +6,16 @@ import { useWalletAuth } from '@/hooks/useWalletAuth';
 export const SettingsPage = () => {
     const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
     const [language, setLanguage] = useState<'ru' | 'en'>('ru');
-    const [autoLock, setAutoLock] = useState<boolean>(true);
     const { isAuthenticated } = useWalletAuth();
 
     const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
         setTheme(newTheme);
-    // Здесь код для применения темы
     };
 
     const handleLanguageChange = (newLanguage: 'ru' | 'en') => {
         setLanguage(newLanguage);
-    // Здесь код для изменения языка
     };
 
-    // const handleAutoLockChange = () => {
-    //   setAutoLock(!autoLock);
-    //   // Здесь код для настройки автоблокировки
-    // };
 
     if (!isAuthenticated) {
         return (
@@ -124,29 +117,6 @@ export const SettingsPage = () => {
                             </button>
                         </div>
                     </div>
-
-                    {/* Раздел безопасности */}
-                    {/* <div className="py-3 flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Безопасность</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Настройки безопасности</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">Автоблокировка</span>
-              <button
-                onClick={handleAutoLockChange}
-                className={`w-12 h-6 rounded-full transition-colors ${
-                  autoLock ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-700'
-                } relative`}
-              >
-                <span
-                  className={`absolute top-1 ${
-                    autoLock ? 'right-1' : 'left-1'
-                  } w-4 h-4 rounded-full bg-white transition-all`}
-                />
-              </button>
-            </div>
-          </div> */}
                 </motion.div>
             </motion.div>
         </div>

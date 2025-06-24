@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-// Определение типа Token должно быть согласовано с остальным проектом
 interface Token {
   symbol: string;
   address?: string;

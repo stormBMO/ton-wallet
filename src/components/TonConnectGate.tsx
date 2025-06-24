@@ -14,12 +14,10 @@ const TonConnectGate = () => {
     useEffect(() => {
         let cancelled = false;
         const fetchNonceAndSetProof = async () => {
-            // Сначала сбрасываем параметры для обновления манифеста
             tonConnectUI.setConnectRequestParameters(null);
             
             tonConnectUI.setConnectRequestParameters({ state: 'loading' });
             try {
-                // Используем константу для бэкенда
                 const { nonce } = await fetch(`${APP_CONFIG.BACKEND_URL}/api/auth/request_nonce`).then(r => r.json());
                 if (!cancelled) {
                     tonConnectUI.setConnectRequestParameters({
@@ -33,7 +31,6 @@ const TonConnectGate = () => {
             }
         };
         fetchNonceAndSetProof();
-        // Сбросить параметры при размонтировании
         return () => {
             cancelled = true;
             tonConnectUI.setConnectRequestParameters(null);
@@ -44,22 +41,11 @@ const TonConnectGate = () => {
         const tonProof = wallet?.connectItems?.tonProof;
         const isProofOk = tonProof && typeof tonProof === 'object' && 'proof' in tonProof;
         
-
-        
         if (wallet && wallet.account?.address && isProofOk) {
-
-            
-            // Устанавливаем адрес в store сразу
             dispatch(setAddress(wallet.account.address));
-            
-            // Выполняем авторизацию через TON Connect
-            tonConnectLogin(wallet).then(() => {
-
-                // После успешной авторизации кошелек остается подключенным для транзакций
-            }).catch((error) => {
-                console.error('❌ Ошибка TON Connect авторизации:', error);
+            tonConnectLogin(wallet).catch((error) => {
+                console.error('Ошибка TON Connect авторизации:', error);
                 console.error('Error details:', error.message);
-                // При ошибке отключаем кошелек
                 tonConnectUI.disconnect();
             });
         }

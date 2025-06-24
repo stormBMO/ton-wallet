@@ -13,10 +13,16 @@ const Header = () => {
     const { isAuthenticated, address, logout } = useWalletAuth();
     const menuOpen = useSelector((state: RootState) => state.ui.isMenuOpen);
     const notify  = useNotify();
+    
+    const handleLogout = async () => {
+        await logout();
+    };
 
     const handleNetworkChange = async () => {
         const newNetwork = wallet.network === 'testnet' ? 'mainnet' : 'testnet';
         dispatch(setNetwork(newNetwork));
+
+        await handleLogout()
     };
 
     const handleCopyAddress = useCallback(() => {
@@ -26,15 +32,11 @@ const Header = () => {
         notify('success', 'Адрес успешно скопирован');
     }, [address, notify]);
 
-    const handleLogout = async () => {
-        await logout();
-    };
 
     return (
         <header className="sticky top-0 w-full bg-white/70 dark:bg-[#14172b]/70 backdrop-blur supports-backdrop-blur:bg-white/70 border-b border-gray-200 dark:border-neutral-800 px-4 py-3 flex items-center justify-between z-20 relative">
             <div className="flex items-center gap-6">
                 <div className="text-2xl font-extrabold tracking-tight select-none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Wallet</div>
-                {/* Десктопное меню */}
                 <nav className="hidden md:flex gap-6 items-center">
                     <Link to="/" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Дашборд</Link>
                     <Link to="/swap" className="text-gray-700 dark:text-gray-200 hover:text-primary dark:hover:text-primary font-medium transition">Своп</Link>
@@ -42,7 +44,6 @@ const Header = () => {
                     <span className={`px-2 py-0.5 rounded text-xs font-semibold ml-2 ${wallet.network === 'testnet' ? 'bg-yellow-400 text-white' : 'bg-green-500 text-white'}`}>{wallet.network === 'testnet' ? 'Testnet' : 'Mainnet'}</span>
                     <button onClick={handleNetworkChange} className="ml-2 text-xs px-2 py-0.5 rounded-xl bg-gray-100 dark:bg-neutral-800 hover:bg-gray-200 dark:hover:bg-neutral-700 text-gray-700 dark:text-gray-200 font-medium transition">Сменить сеть</button>
                 </nav>
-                {/* Кнопка-гамбургер для мобилы */}
                 <button className="md:hidden" onClick={() => dispatch(setMenuOpen(true))}>
                     <svg width="28" height="28" fill="none"><path d="M4 7h20M4 14h20M4 21h20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
                 </button>
@@ -64,11 +65,9 @@ const Header = () => {
                     </button>
                 )}
             </div>
-            {/* Мобильное меню */}
             {menuOpen && (
-                <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end">
+                <div className="fixed inset-0 z-50 bg-white/60 backdrop-blur-sm flex justify-end rounded-2xl">
                     <div className="w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl h-full shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col animate-slide-in-right">
-                        {/* Заголовок меню */}
                         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur">
                             <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                                 Меню
@@ -84,8 +83,7 @@ const Header = () => {
                             </button>
                         </div>
 
-                        {/* Навигационные ссылки */}
-                        <div className="flex-1 p-6 space-y-2">
+                        <div className="flex-1 p-6 space-y-2 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur">
                             <Link 
                                 to="/" 
                                 onClick={() => dispatch(setMenuOpen(false))} 
@@ -128,7 +126,6 @@ const Header = () => {
                             </Link>
                         </div>
 
-                        {/* Сетевые настройки */}
                         <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur">
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">

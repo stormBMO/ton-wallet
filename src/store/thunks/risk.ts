@@ -1,13 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RiskMetrics, RiskV2Metrics } from "../slices/risk/types";
-import { fetchRisk, RiskApiType } from "@/api/riskApi";
+import { fetchRisk } from "@/api/riskApi";
 import { RootState } from '../index';
+import { RiskApiType } from "@/api/types";
+import { Network } from "../types";
 
 export type RiskThunkResult = RiskMetrics | RiskV2Metrics;
 
 export const fetchRiskMetrics = createAsyncThunk<
   RiskThunkResult,
-  { address: string; apiType?: RiskApiType; network?: 'mainnet' | 'testnet' },
+  { address: string; apiType?: RiskApiType; network?: Network },
   { rejectValue: string }
 >(
     'risk/fetchRiskMetrics',

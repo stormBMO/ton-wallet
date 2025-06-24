@@ -1,45 +1,34 @@
 import apiClient from './axios';
 import { RiskMetrics, RiskV2Metrics } from '@/store/slices/risk/types';
+import { RiskApiType } from './types';
+import { Network } from '@/store/types';
 
-export type RiskApiType = 'v1' | 'v2';
-
-// Конвертация hex-адреса TON в base64 (EQ-формат)
 function convertHexToBase64Address(hexAddress: string): string {
     if (!hexAddress.startsWith('0:')) {
-        return hexAddress; // Уже в правильном формате
+        return hexAddress;
     }
     
     try {
-        // Удаляем "0:" и конвертируем hex в buffer
         const hexPart = hexAddress.slice(2);
         const buffer = new Uint8Array(hexPart.match(/.{2}/g)?.map(byte => parseInt(byte, 16)) || []);
         
-        // Конвертируем в base64 и добавляем префикс EQ
         const base64 = btoa(String.fromCharCode(...buffer));
         return `EQ${base64}`;
     } catch (error) {
         console.warn(`Failed to convert hex address: ${hexAddress}`, error);
-        return hexAddress; // Возвращаем оригинал при ошибке
+        return hexAddress;
     }
 }
 
-// Проверка валидности адреса
 function isValidTokenAddress(address: string): boolean {
-    // Для нативного TON (нулевой адрес) разрешаем обработку
     if (address === "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c") {
-        return true;  // Теперь разрешаем нативный TON
+        return true;
     }
     
-    // UUID токены
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidRegex.test(address)) {
         return false;
     }
-    
-    // Разрешаем hex-адреса - они будут конвертированы
-    // if (address.startsWith('0:') && address.length > 60) {
-    //     return false;
-    // }
     
     return true;
 }
@@ -49,22 +38,19 @@ export async function fetchRiskV1(address: string): Promise<RiskMetrics> {
         throw new Error(`Invalid token address: ${address}`);
     }
     
-    // Конвертируем hex-адрес если нужно
     const convertedAddress = convertHexToBase64Address(address);
     
     const { data } = await apiClient.get<RiskMetrics>(`/api/risk_v1/${convertedAddress}`);
     return data;
 }
 
-export async function fetchRiskV2(address: string, network: 'mainnet' | 'testnet' = 'mainnet'): Promise<RiskV2Metrics> {
+export async function fetchRiskV2(address: string, network: Network = 'mainnet'): Promise<RiskV2Metrics> {
     if (!isValidTokenAddress(address)) {
         throw new Error(`Invalid token address: ${address}`);
     }
     
-    // Конвертируем hex-адрес если нужно
     const convertedAddress = convertHexToBase64Address(address);
     
-    // Используем query параметр вместо path параметра для решения проблемы с URL encoding
     const { data } = await apiClient.get<RiskV2Metrics>(`/api/risk_v2/`, {
         params: { 
             token_address: convertedAddress,
@@ -74,7 +60,7 @@ export async function fetchRiskV2(address: string, network: 'mainnet' | 'testnet
     return data;
 }
 
-export async function fetchRisk(address: string, apiType: RiskApiType = 'v2', network: 'mainnet' | 'testnet' = 'mainnet') {
+export async function fetchRisk(address: string, apiType: RiskApiType = 'v2', network: Network = 'mainnet') {
     if (apiType === 'v2') {
         return fetchRiskV2(address, network);
     }

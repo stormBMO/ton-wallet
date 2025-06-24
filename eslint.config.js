@@ -38,6 +38,7 @@ export default tseslint.config(
       'react/function-component-definition': 'off',
       'react-hooks/exhaustive-deps': 'warn',
       'react-hooks/rules-of-hooks': 'error',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   }
 );

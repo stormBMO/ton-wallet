@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { RiskMetrics, RiskV2Metrics } from './types';
-import { fetchRiskMetrics, RiskThunkResult } from '@/store/thunks/risk';
+import { fetchRiskMetrics } from '@/store/thunks/risk';
   
 export interface RiskState {
   byToken: Record<string, RiskMetrics | RiskV2Metrics | undefined>;

@@ -12,13 +12,11 @@ declare global {
   }
 }
 
-// Устанавливаем полифиллы глобально
 globalThis.Buffer = Buffer;
 globalThis.process = process;
 globalThis.Readable = Readable;
 globalThis.util = util;
 
-// Также устанавливаем в window для совместимости
 window.Buffer = Buffer;
 window.process = process;
 window.Readable = Readable;

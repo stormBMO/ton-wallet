@@ -47,8 +47,6 @@ export const useDashboard = () => {
         }
     }, [tokens, network, dispatch]);
 
-    // Риск-метрики загружаются автоматически в loadWalletData
-
     const displayTokens = useMemo(() => {
         return tokens.map(token => ({
             ...token,

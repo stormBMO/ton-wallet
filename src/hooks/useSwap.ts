@@ -17,7 +17,6 @@ export const useSwap = () => {
     const debounceRef = useRef<NodeJS.Timeout | null>(null);
     const userTokens = wallet.tokens || [];
 
-    // Методы для работы с локальным состоянием свопа
     const setFromToken = (token: string) => dispatch(swapSlice.actions.setFromToken(token));
     const setToToken = (token: string) => dispatch(swapSlice.actions.setToToken(token));
     const setAmount = (amount: string) => dispatch(swapSlice.actions.setAmount(amount));
@@ -32,7 +31,6 @@ export const useSwap = () => {
     const setWalletType = (type: 'tonconnect' | 'internal') => dispatch(swapSlice.actions.setWalletType(type));
     const resetSwap = () => dispatch(swapSlice.actions.resetSwap());
 
-    // Получение котировки с правильной обработкой ошибок и отсутствия ликвидности
     const fetchQuote = useCallback(async () => {
         if (!wallet.address || !swap.fromToken || !swap.toToken || !swap.amount) {
             setRate('—');
@@ -50,13 +48,11 @@ export const useSwap = () => {
             }));
             if (getQuote.fulfilled.match(resultAction)) {
                 const quote = resultAction.payload as any;
-                // Если есть ошибка или нет ликвидности — не обновляем котировку и не делаем повторных запросов
                 if (quote?.error || quote?.rate === '—' || quote?.expectedAmount === '0') {
                     setRate('—');
                     setMinReceive('—');
                     let errorMsg = quote?.error || 'Нет котировки для выбранной пары';
                     
-                    // Улучшенные сообщения об ошибках
                     if (errorMsg.includes('Asset not found')) {
                         errorMsg = `Токены ${swap.fromToken} или ${swap.toToken} не поддерживаются MyTonSwap в testnet. Попробуйте виджет или другие токены.`;
                     } else if (errorMsg.includes('No route found')) {
@@ -77,6 +73,7 @@ export const useSwap = () => {
                 setRateError(resultAction.payload as string || 'Пара недоступна или нет ликвидности. Попробуйте виджет MyTonSwap.');
             }
         } catch (error: any) {
+            console.error(error);
             setRate('—');
             setMinReceive('—');
             setRateError('Ошибка получения котировки. Попробуйте виджет MyTonSwap.');
@@ -85,7 +82,6 @@ export const useSwap = () => {
         }
     }, [dispatch, wallet.address, swap.fromToken, swap.toToken, swap.amount, setRate, setMinReceive, setRateError, setFee, swap.toToken, swap.fromToken]);
 
-    // Выполнение свопа
     const performSwap = useCallback(async () => {
         if (!wallet.address || !tonConnectUI) {
             setErrorMsg('Кошелек не подключен');
@@ -115,7 +111,6 @@ export const useSwap = () => {
         }
     }, [dispatch, wallet.address, swap.fromToken, swap.toToken, swap.amount, tonConnectUI, setErrorMsg, setShowError, setShowSuccess, setAmount]);
 
-    // Обновляем котировку при изменении параметров свопа с debounce
     useEffect(() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
