@@ -1,7 +1,7 @@
 export const APP_CONFIG = {
     APP_URL: 'https://personal-ton-wallet.vercel.app/',
     
-    BACKEND_URL: import.meta.env.VITE_APP_BACKEND_URL || process.env.VITE_APP_BACKEND_URL || 'http://127.0.0.1:8000',
+    BACKEND_URL: import.meta?.env?.VITE_APP_BACKEND_URL || process.env.VITE_APP_BACKEND_URL || 'http://127.0.0.1:8000',
     
     get MANIFEST_URL() {
         return `${this.APP_URL}/tonconnect-manifest.json`;
