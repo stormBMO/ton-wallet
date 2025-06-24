@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const APP_URL = process.env.URL || 'https://f0a0-185-21-88-98.ngrok-free.app';
+const APP_URL = process.env.URL || 'https://b2c0-79-127-239-83.ngrok-free.app';
 
 const extractDomain = (url) => {
     try {

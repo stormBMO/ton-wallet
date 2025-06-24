@@ -1,7 +1,7 @@
 // Основные URL конфигурации
 export const APP_CONFIG = {
     // Основной URL приложения (ngrok или localhost)
-    APP_URL: 'https://f0a0-185-21-88-98.ngrok-free.app',
+    APP_URL: 'https://b2c0-79-127-239-83.ngrok-free.app',
     
     // URL бэкенда
     BACKEND_URL: process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000',
